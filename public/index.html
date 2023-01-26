@@ -152,14 +152,14 @@ li {
 
   function createIcons(shuffled) {
       var tid = 'cpta_' + _.random(0, 1002);
-      var ticon = '<span title="' + shuffled[bingo] + '" class="glyphicon glyphicon-' + shuffled[bingo] + '"></span>';
+      var ticon = '<span title="' + shuffled[bingo] + '" className="glyphicon glyphicon-' + shuffled[bingo] + '"></span>';
       var k = '';
       var tarDiv = '#bscTargetDiv';
       var workingWith = -1;
 
       $('<div/>', {
           'class': 'row',
-          'html': '<div class="col-md-offset-3 col-md-6 text-center" id="bscTargetDiv"></div>'
+          'html': '<div className="col-md-offset-3 col-md-6 text-center" id="bscTargetDiv"></div>'
       }).appendTo($el);
 
       $('<p/>', {
@@ -176,13 +176,13 @@ li {
           if (inx > 0) {
               k += '&nbsp;&nbsp;';
           }
-          k += '<span class="bscpta glyphicon glyphicon-' + s + '" data-inx="' + inx + '"></span>';
+          k += '<span className="bscpta glyphicon glyphicon-' + s + '" data-inx="' + inx + '"></span>';
       });
       $('#' + tid).html(k);
 
       $('<div/>', {
           id: 'target',
-          html: '<p class="lead text-center" id="dropHere">Target Square</p>'
+          html: '<p className="lead text-center" id="dropHere">Target Square</p>'
       }).appendTo(tarDiv);
       $('#target')
           .css('box-shadow', '4px 4px 1px 2px #2667FF')

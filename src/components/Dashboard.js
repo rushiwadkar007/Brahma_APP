@@ -37,7 +37,7 @@ function showsubmit(props) {
                 <div className="tacbox bg-warning">
      
      <input id="checkbox" type="checkbox" />
-     <label for="checkbox"> I agree to these <a href="#">Terms and Conditions</a>.</label>
+     <label htmlFor="checkbox"> I agree to these <a href="#">Terms and Conditions</a>.</label>
    </div>
                     <button className='btn btn-success' data-dismiss="#modal">Confirm Submission</button>
                 </div>
@@ -63,7 +63,7 @@ function Payment(props) {
         <input className='form-control text-primary' value={ethr} disabled required  placeholder='Password' name='pass' type='password'/>
         
        <input className='form-check-input'  name='rem' id='flexCheckDefault' type='checkbox'/>
-   <label class="form-check-label" for="flexCheckDefault">
+   <label className="form-check-label" htmlFor="flexCheckDefault">
     Remember Me 
   </label>
   <br/>
@@ -294,7 +294,7 @@ function Dashboard_component(props) {
         <button style={{marginBottom:17,marginTop:17}} className='btn btn-success'>Upload File</button>
        </span>
        </form>
-       <span class="wrapper">
+       <span className="wrapper">
         <button onClick={openmodal} className='btn btn-success'>Submit Paper</button>
        
         <button style={{marginLeft:4}} onClick={openmodalhis} className='btn btn-info'>Show History</button>
@@ -319,7 +319,7 @@ function Dashboard_component(props) {
             <div className="tacbox bg-warning">
      
      <input id="checkbox" type="checkbox" />
-     <label style={{marginLeft:8}} for="checkbox"> I agree to these <a href="#">Terms and Conditions</a>.</label>
+     <label style={{marginLeft:8}} htmlFor="checkbox"> I agree to these <a href="#">Terms and Conditions</a>.</label>
    </div>
                 <Button variant='secondary' onClick={closemodal}>Close</Button>
                 <Button variant='primary' onClick={closemodal}>Confirm Submission</Button>
@@ -341,7 +341,7 @@ function Dashboard_component(props) {
             </Modal.Body>
             <Modal.Footer >
             <input className='form-check-input'  name='rem' id='flexCheckDefault' type='checkbox'/>
-   <label class="form-check-label" for="flexCheckDefault">
+   <label className="form-check-label" htmlFor="flexCheckDefault">
     I want to proceed 
   </label>
   <br/>
@@ -514,7 +514,7 @@ function Dashboard_component(props) {
             <div className="tacbox bg-warning">
      
      <input id="checkbox" type="checkbox" />
-     <label style={{marginLeft:8}} for="checkbox"> I agree to <a href="#">Terms and Conditions</a> of approval.</label>
+     <label style={{marginLeft:8}} htmlFor="checkbox"> I agree to <a href="#">Terms and Conditions</a> of approval.</label>
    </div>
                 <Button variant='secondary' onClick={mailunload}>Close</Button>
                 <Button variant='primary' onClick={mailconf}>Confirm Status</Button>
@@ -566,7 +566,7 @@ function Dashboard_component(props) {
             <div className="tacbox bg-warning">
      
      <input id="checkbox" type="checkbox" />
-     <label style={{marginLeft:8}} for="checkbox"> I am sure to Edit. Post Edit File: <a href="#">File Link</a>.</label>
+     <label style={{marginLeft:8}} htmlhtmlFor="checkbox"> I am sure to Edit. Post Edit File: <a href="#">File Link</a>.</label>
    </div>
                 <Button variant='secondary' onClick={pdfunload}>Close</Button>
                 <Button variant='primary' onClick={pdfunload}>Save Edits</Button>
@@ -667,7 +667,7 @@ export function Dashboard(props) {
     const [seloption,setseloption]=useState(null);
     return (
         <>
-         <label class="text-danger text" for="type">Welcome {name} as 
+         <label className="text-danger text" htmlFor="type">Welcome {name} as 
           </label>
           <Select value={type} options={options} onChange={setseloption}/>
           <Dashboard_component type={seloption ? seloption.value : ""}/>

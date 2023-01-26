@@ -4,13 +4,13 @@ import ReCAPTCHA from 'react-google-recaptcha';
 import React,{createContext, useContext, useRef} from 'react';
 import { BrowserRouter,Routes,Route } from 'react-router-dom';
 import { Layout } from './Layout';
-import { Login, loguser } from './Login';
-import { Signup } from './Signup';
+import { Login, loguser } from './components/Login';
+import { Signup } from './components/Signup';
 import { Forgpass } from './Forgpass';
-import { Wallet } from './wallet';
+import { Wallet } from './components/wallet';
 import { render } from '@testing-library/react';
-import { Dashboard } from './Dashboard';
-
+import { Dashboard } from './components/Dashboard';
+import {Provider} from 'react-redux'
 export const luser=createContext();
 
 export default function App() {
