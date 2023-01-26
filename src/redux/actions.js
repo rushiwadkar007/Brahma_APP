@@ -7,3 +7,11 @@ export const addUser =  (user) => {
     payload: { email: user[0], password: user[1] },
   };
 };
+
+export const walletDetails = (wallet) =>{
+  console.log("wallet details ", wallet);
+  return{
+    type: "ADD_WALLET",
+    payload: {address: wallet.selectedAddress}
+  }
+}

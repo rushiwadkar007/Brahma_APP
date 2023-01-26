@@ -16,20 +16,14 @@ export function Login(props) {
   const navigate = useNavigate()
   const userData = useSelector((user) => user);
   console.log("userData", userData.login)
+  
   const [role, setrole] = useState("Reviewer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [user, setuser] = useState([]);
 
-  // const updateuser = (event) => {
-  //   event.preventDefault();
-  //   console.log(event)
-  //   setuser(user => [...user, ...event.target.value.split(",")]);
-  //   console.log(user)
-  // };
-  const [type, settype] = useState("type");
   let { flag } = props;
-  const login =  () => {
+  const loginDetails =  () => {
     if (user.length > 0) {
       dispatch(addUser(user))
        toast.success("Redirecting to Wallet...", {
@@ -41,7 +35,6 @@ export function Login(props) {
         return <Dashboard cuser={{ name: "user", type: "Reviewer" }} />;
       }, 4000);
     }
-    
   };
 
   const handleOnSubmit = async (event) => {
@@ -56,7 +49,7 @@ export function Login(props) {
   };
 
   useEffect(() => {
-    login()
+    loginDetails()
     console.log("user use effect ", user);
   }, [user]);
 
@@ -110,7 +103,7 @@ export function Login(props) {
           Remember Me
         </label>
         <br />
-        <button onClick={login} disabled={!flag} className="btn btn-success">
+        <button onClick={loginDetails} disabled={!flag} className="btn btn-success">
           LOGIN
         </button>
       </form>

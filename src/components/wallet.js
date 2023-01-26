@@ -1,7 +1,9 @@
 import "../App.css";
 import MetaMaskSDK from "@metamask/sdk";
 import { useState, useEffect } from "react";
-
+import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
+import { walletDetails } from "../redux/actions";
 new MetaMaskSDK({
   useDeeplink: false,
   communicationLayerPreference: "socket",
@@ -11,14 +13,18 @@ export function Wallet() {
   const [chain, setChain] = useState("");
   const [account, setAccount] = useState("");
   const [response, setResponse] = useState("");
+  const [wallet, setWallet] = useState({})
+  const dispatch = useDispatch()
+  const walletData = useSelector((wallet) => wallet);
 
-  const connect = () => {
+  const connect = async () => {
+    await dispatch(walletDetails(window.ethereum))
     window.ethereum
       .request({
         method: "eth_requestAccounts",
         params: [],
       })
-      .then((res) => console.log("request accounts", res))
+      .then((res) => {setAccount(res[0])})
       .catch((e) => console.log("request accounts ERR", e));
   };
 
@@ -41,6 +47,8 @@ export function Wallet() {
   };
 
   useEffect(() => {
+    connect()
+    
     window.ethereum.on("chainChanged", (chain) => {
       console.log(chain);
       setChain(chain);
