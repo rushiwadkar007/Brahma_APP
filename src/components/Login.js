@@ -15,6 +15,7 @@ export function Login(props) {
   const dispatch = useDispatch();
   const navigate = useNavigate()
   const userData = useSelector((user) => user);
+  console.log("userData", userData.login)
   const [role, setrole] = useState("Reviewer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

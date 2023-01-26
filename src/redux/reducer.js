@@ -1,5 +1,4 @@
-import { combineReducers } from 'redux'
-
+import { configureStore, combineReducers } from '@reduxjs/toolkit'
 const loginReducer = (state = [], action) => {
     switch (action.type) {
         case "ADD_USER":
