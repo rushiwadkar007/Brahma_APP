@@ -1,7 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import Select from "react-select";
 import { UploaderComponent } from "@syncfusion/ej2-react-inputs";
-import Table from 'react-bootstrap/Table';
+import Form from "react-bootstrap/Form";
+import Table from "react-bootstrap/Table";
 import { click } from "@testing-library/user-event/dist/click";
 import { Button, Modal } from "react-bootstrap";
 import { Radio } from "@mobiscroll/react-lite";
@@ -11,7 +12,7 @@ import { create, IPFSHTTPClient } from "ipfs-http-client";
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import { Rating } from "react-simple-star-rating";
-
+import ApplyRole from "./ApplyRole";
 function showsubmit(props) {
   const { user, type, email, loc, phno, modltype, isapproved } = props;
   return (
@@ -122,14 +123,40 @@ function Payment(props) {
 }
 
 function Dashboard_component(props) {
+  const { account, contract, web3 } = props;
+  let web3accountadd = "";
   const { user, type } = props;
   const isaproved = useRef(false);
-  const [addr, setaddr] = useState(
-    "0xb6cba76Df107aB90601866C4c375Ac4349990117"
-  );
+  const [fName, setFName] = useState("");
+  const [lName, setLName] = useState("");
+  const [designation, setDesignation] = useState("");
+  const [affiliation, setAffiliation] = useState("");
+  const [city, setCity] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNo, setPhoneNo] = useState("");
+  const [orcidID, setOrcidID] = useState("");
+  const [addr, setaddr] = useState("");
   const [ethr, setethr] = useState(0.02);
+  console.log("dashboard component accoount contract web3 ", addr);
   const [money, setmoney] = useState(false);
   const [txs, settsx] = useState([]);
+  const web3Account = async () => {
+    web3accountadd = await web3.eth.getAccounts();
+    setaddr(web3accountadd[0]);
+  };
+  const [show, setShow] = useState(false);
+
+  const handleClose = () => {
+  setFName("")
+  setLName("")
+  setDesignation("")
+  setAffiliation("")
+  setCity("")
+  setEmail("")
+  setPhoneNo(0)
+  setOrcidID("")
+  setShow(false)};
+  const handleShow = () => setShow(true);
   const dopayment = async (settransac, ethr, addr) => {
     if (window.ethereum) {
       try {
@@ -304,6 +331,68 @@ function Dashboard_component(props) {
       console.log(err.message);
     }
   };
+
+  useEffect(() => {
+    web3Account();
+  }, []);
+
+
+
+  // const handleSubmitAuthor= (event) =>{
+  //   event.preventDefault()
+  //   setFName("")
+  //   setLName("")
+  //   setDesignation("")
+  //   setAffiliation("")
+  //   setCity("")
+  //   setEmail("")
+  //   setPhoneNo(0)
+  //   setOrcidID("")
+  //   // console.log(fName, lName, designation, affiliation, city,email, addr phoneNo, orcidID, handleChangeFName, handleChangeLName, handleChangeDesignation, handleChangeAffiliation, handleChangeCity, handleChangePhoneNo, handleChangeOrcidID);
+  // }
+
+  const handleChangeFName = (e) =>{
+    setFName(e.target.value)
+  }
+
+  const handleChangeLName = (e) =>{
+    setLName(e.target.value)
+  }
+  
+
+  const handleChangeDesignation = (e) =>{
+    setDesignation(e.target.value)
+  }
+  
+
+  const handleChangeAffiliation = (e) =>{
+    setAffiliation(e.target.value)
+  }
+
+  const handleChangeCity = (e) =>{
+    setCity(e.target.value)
+  }
+
+  const handleChangeEmail = (e) =>{
+    setEmail(e.target.value)
+  }
+
+  const handleChangeAddr = (e) =>{
+    setaddr(e.target.value)
+  }
+
+  const handleChangePhoneNo = (e) =>{
+    setPhoneNo(e.target.value)
+  }
+
+  const handleChangeOrcidID = (e) =>{
+    setOrcidID(e.target.value)
+  }
+
+  const sendAuthReq= async ()=>{
+    const result =  await contract.methods.applyForAuthorRole(fName,lName,designation,affiliation,city,email,phoneNo,addr,orcidID).send({ from: addr });
+    console.log("result ", result);
+  }
   const uploadfile = (event) => {
     const data = event.target.files[0];
     const reader = new window.FileReader();
@@ -894,45 +983,61 @@ function Dashboard_component(props) {
       );
     } else if (type === "User") {
       return (
-        <Table style={{background:"#F1EBEA"}} striped bordered hover>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Role</th>
-          <th>Apply</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>1</td>
-          <td>AUTHOR</td>
-          <td >
-          <Button variant="success">APPLY</Button>
-          </td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>EDITOR</td>
-          <td>
-          <Button variant="danger">APPLIED</Button>
-          </td>
-        </tr>
-        <tr>
-          <td>3</td>
-          <td>REVIEWER</td>
-          <td>
-          <Button variant="success">APPLY</Button>
-          </td>
-        </tr>
-        <tr>
-          <td>4</td>
-          <td>PUBLISHER</td>
-          <td>
-          <Button variant="danger">APPLIED</Button>
-          </td>
-        </tr>
-      </tbody>
-    </Table>
+        <Table style={{ background: "#F1EBEA" }} striped bordered hover>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Role</th>
+              <th>Apply</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>AUTHOR</td>
+              <td>
+                <Button variant="success" onClick={handleShow}>
+                  APPLY
+                </Button>
+              </td>
+              <Modal show={show} onHide={handleClose}>
+                <Modal.Header closeButton>
+                  <Modal.Title>Apply For Author Role</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <ApplyRole  fName={fName} lName={lName} designation={designation} affiliation={affiliation} city={city} email={email} addr={addr} phoneNo={phoneNo} orcidID ={orcidID} handleChangeFName={handleChangeFName} handleChangeLName={handleChangeLName} handleChangeDesignation={handleChangeDesignation} handleChangeAffiliation={handleChangeAffiliation} handleChangeCity={handleChangeCity} handleChangeEmail={handleChangeEmail} handleChangePhoneNo={handleChangePhoneNo} handleChangeOrcidID={handleChangeOrcidID}/>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button variant="secondary" onClick={handleClose}>
+                    Close
+                  </Button>
+                  <Button variant="primary" onClick={() => sendAuthReq(fName, lName, designation, affiliation, city,email, phoneNo, orcidID)}>APPLY</Button>
+                </Modal.Footer>
+              </Modal>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>EDITOR</td>
+              <td>
+                <Button variant="danger">✖</Button>
+              </td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>REVIEWER</td>
+              <td>
+                <Button variant="success">APPLY</Button>
+              </td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>PUBLISHER</td>
+              <td>
+                <Button variant="danger">✖</Button>
+              </td>
+            </tr>
+          </tbody>
+        </Table>
       );
     }
   }
@@ -986,7 +1091,12 @@ export function Dashboard(props) {
         Welcome {name} as
       </label>
       <Select value={type} options={options} onChange={setseloption} />
-      <Dashboard_component type={seloption ? seloption.value : ""} />
+      <Dashboard_component
+        type={seloption ? seloption.value : ""}
+        account={account}
+        contract={contract}
+        web3={web3}
+      />
     </>
   );
 }
