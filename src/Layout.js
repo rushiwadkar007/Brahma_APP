@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { luser } from "./App";
 import { loguser } from "./components/Login";
-export const Layout=()=>{
+export const Layout=({web3, contract, account})=>{
     const user=useContext(luser);
     console.log(user);
     return <>

@@ -1,21 +1,29 @@
 import "../App.css";
 import MetaMaskSDK from "@metamask/sdk";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { walletDetails } from "../redux/actions";
+import data from "../contractdetails/Brahma.json"
+import Web3 from "web3";
+const ABI = data.abi
+const ADDRESS = data.networks[3].address
 new MetaMaskSDK({
   useDeeplink: false,
   communicationLayerPreference: "socket",
 });
 
 export function Wallet() {
+  const navigate = useNavigate()
   const [chain, setChain] = useState("");
-  const [account, setAccount] = useState("");
   const [response, setResponse] = useState("");
   const [wallet, setWallet] = useState({})
   const dispatch = useDispatch()
   const walletData = useSelector((wallet) => wallet);
+  const [web3, setWeb3] = useState(null);
+  const [contract, setContract] = useState(null);
+  const [account, setAccount] = useState("");
 
   const connect = async () => {
     await dispatch(walletDetails(window.ethereum))
@@ -34,11 +42,11 @@ export function Wallet() {
         method: "wallet_addEthereumChain",
         params: [
           {
-            chainId: "0x89",
-            chainName: "Polygon",
-            blockExplorerUrls: ["https://polygonscan.com"],
+            chainId: "0x13881",
+            chainName: "matic-mumbai",
+            blockExplorerUrls: ["https://mumbai.polygonscan.com/"],
             nativeCurrency: { symbol: "MATIC", decimals: 18 },
-            rpcUrls: ["https://polygon-rpc.com/"],
+            rpcUrls: ["https://rpc.ankr.com/polygon_mumbai"],
           },
         ],
       })
@@ -46,8 +54,25 @@ export function Wallet() {
       .catch((e) => console.log("ADD ERR", e));
   };
 
+  // const getRole = async() =>{
+  //   const currentRole =  await  contract.methods.getUserRole("0x9A712b4980B474F9Edc6eD6599E4AdF2E6f8bc31").call();
+  //   console.log("currentRole",currentRole)
+  //   }
+
   useEffect(() => {
     connect()
+
+    const initWeb3 = async () => {
+      // Connect to the blockchain
+      const web3 = new Web3(Web3.givenProvider);
+
+      // Get the contract instance
+      const contract = new web3.eth.Contract(ABI, ADDRESS);
+      web3.setProvider("https://rpc.ankr.com/polygon_mumbai");
+      setWeb3(web3);
+      setContract(contract);
+    };
+    initWeb3();
     
     window.ethereum.on("chainChanged", (chain) => {
       console.log(chain);
@@ -180,6 +205,10 @@ export function Wallet() {
 
         <button className="btn btn-success" style={{ padding: 10, margin: 10 }} onClick={addEthereumChain}>
           Add ethereum chain
+        </button>
+
+        <button className="btn btn-success" style={{ padding: 10, margin: 10 }} onClick={ () => {navigate("/dashboard")}}>
+          Go to Dashboard
         </button>
 
         {chain && `Connected chain: ${chain}`}
