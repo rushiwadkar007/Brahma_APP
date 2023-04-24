@@ -5,8 +5,6 @@ const jwt = require('jsonwebtoken');
 
 const register = async (req, res) => {
 
-    console.log(req.body.username);
-
     const newUser = new User({
 
         username: req.body.username,
@@ -16,6 +14,8 @@ const register = async (req, res) => {
         password: crypto.AES.encrypt(req.body.password, process.env.PASS_SEC).toString(),
 
         isAdmin: req.body.isAdmin,
+
+        ORCIDID: req.body.orcidID,
 
         mnemonic: ""
 

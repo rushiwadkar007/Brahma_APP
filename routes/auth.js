@@ -2,10 +2,12 @@ const router = require('express').Router();
 
 const { register, login } = require("../controllers/auth");
 
-const { verifyToken, verifyTokenAndAuthorization } = require('../middlewares/verifyToken');
+const { verifyTokenAndAuthorization } = require('../middlewares/verifyToken');
 
 const verifyTokenController = require("../controllers/user");
+
 const bodyParser = require('body-parser');
+
 var urlencodedParser = bodyParser.urlencoded({ extended: true });
 /**
  * @dev - Register API

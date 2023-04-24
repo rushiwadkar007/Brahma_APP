@@ -1,6 +1,6 @@
 const Web3 = require('web3');
 const { Wallet } = require('ethers');
-const web3 = new Web3(new Web3.providers.HttpProvider("https://rinkeby.infura.io/v3/0480f6f61a2c48d18ca1365c7de71013"));
+const web3 = new Web3(new Web3.providers.HttpProvider("https://rpc.ankr.com/polygon_mumbai"));
 const dotenv = require("dotenv");
 dotenv.config();
 const ETx = require("ethereumjs-tx").Transaction;

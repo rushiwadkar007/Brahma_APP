@@ -1,0 +1,27 @@
+const [fName, setFName] = useState("")                                               
+const [lName, setLName] = useState("")
+const [designation, setDesignation] = useState("")
+const [affiliation, setAffiliation] = useState("")
+const [city, setCity] = useState("")
+const [email, setEmail] = useState("")
+const [phoneNo, setPhoneNo] = useState(0)
+const [orcidID, setOrcidID] = useState("")
+
+setFName
+setLName
+setDesignation
+setAffiliation
+setCity
+setEmail
+setPhoneNo
+setOrcidID
+
+setFName("")
+  setLName("")
+  setDesignation("")
+  setAffiliation("")
+  setCity("")
+  setEmail("")
+  setPhoneNo(0)
+  setOrcidID("")
+  setShow(false)};
