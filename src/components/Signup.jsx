@@ -36,6 +36,7 @@ export function Signup(props) {
     }
     return (
         <>
+        <div className="formSection">
         <form className='form-group gap-3' action='#' method='POST' encType='application/x-www-form-urlencoded'>
         <input className='form-control text-primary ' onChange={changename} required placeholder='Email Address' id='email' name='email' onChange={e =>{handleChange(e)}} type='email'/>
         <input className='form-control text-primary' required  placeholder='Password' name='pass' type='password' onChange={e =>{handleChange(e)}}/>
@@ -51,9 +52,10 @@ export function Signup(props) {
     Remember Me 
   </label>
   <br/>
-  <button onClick={signup} disabled={!flag} className='btn btn-success'>SIGN-UP</button>
+  <button onClick={signup} disabled={!flag} className=' btn btn-1'>SIGN-UP</button>
        </form>
        <ToastContainer/>
+       </div>
        </>
     );
 }

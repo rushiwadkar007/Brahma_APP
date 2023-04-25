@@ -15,6 +15,7 @@ export function Forgpass(props) {
     return (
         <>
         <ToastContainer/>
+        <div className="formSection">
         <form className='form-group' action='#' method='POST' encType='application/x-www-form-urlencoded'>
         <input className='form-control text-primary' required placeholder='Email Address' name='email' type='email'/>
                
@@ -22,8 +23,9 @@ export function Forgpass(props) {
 
 
   <br/>
-  <button onClick={forpass} disabled={!flag} className='btn btn-success'>REST PASSWORD</button>
+  <button onClick={forpass} disabled={!flag} className='btn btn-1'>REST PASSWORD</button>
        </form>
+       </div>
        </>
     );
 }

@@ -2,17 +2,16 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-contract BrahmaBlockchain{
-
+contract BrahmaBlockchain {
     address public admin;
 
-    struct Authors{
-        string  firstName;
-        string  lastName;
-        string  designation;
-        string  affiliation;
-        string  city;
-        string  email;
+    struct Authors {
+        string firstName;
+        string lastName;
+        string designation;
+        string affiliation;
+        string city;
+        string email;
         uint256 phNo;
         address author;
         uint256 ORCIDID;
@@ -20,32 +19,32 @@ contract BrahmaBlockchain{
     }
 
     struct Editors {
-        string  firstName;
-        string  lastName;
-        string  designation;
-        string  affiliation;
-        string  city;
-        string  email;
+        string firstName;
+        string lastName;
+        string designation;
+        string affiliation;
+        string city;
+        string email;
         uint256 phNo;
         address editor;
         uint256 ORCIDID;
         bool isApproved;
     }
 
-    struct Reviewers{
-        string  firstName;
-        string  lastName;
-        string  designation;
-        string  affiliation;
-        string  city;
-        string  email;
+    struct Reviewers {
+        string firstName;
+        string lastName;
+        string designation;
+        string affiliation;
+        string city;
+        string email;
         uint256 phNo;
         address reviewer;
         uint256 ORCIDID;
         bool isApproved;
     }
 
-    struct Publishers{
+    struct Publishers {
         string[] publisherInfo;
         uint256 phNo;
         uint256 ISSN;
@@ -57,9 +56,9 @@ contract BrahmaBlockchain{
         bool isApproved;
     }
 
-// open access
-// if not open only abstract accesss - like only first 200 characters should be visible... and some keywords....
-    struct Papers{
+    // open access
+    // if not open only abstract accesss - like only first 200 characters should be visible... and some keywords....
+    struct Papers {
         string URL;
         uint256 paperID;
         address paperCreator;
@@ -73,7 +72,7 @@ contract BrahmaBlockchain{
         bool isPaperApproved;
     }
 
-    struct PaperReview{
+    struct PaperReview {
         uint256 paperID;
         address reviewer;
         string remarks;
@@ -87,80 +86,147 @@ contract BrahmaBlockchain{
     Papers[] papers;
     PaperReview[] paperReview;
 
-
-    event AuthorCreated(string firstName, string  lastName, string  designation, string  affiliation, string  city, string  email, uint256 phNo, address author, uint256 orcidID);
-    event EditorCreated(string firstName, string  lastName, string  designation, string  affiliation, string  city, string  email, uint256 phNo, address editor, uint256 orcidID);
-    event ReviewerCreated(string firstName, string  lastName, string  designation, string  affiliation, string  city, string  email, uint256 phNo, address reviewer, uint256 orcidID);
-    event PublisherCreated(string[] publisherInfo, uint256 phNo, uint256 ISSN, string email, string designation, string journalName,uint256 publisherID, address publisher, bool isApproved);
+    event AuthorCreated(
+        string firstName,
+        string lastName,
+        string designation,
+        string affiliation,
+        string city,
+        string email,
+        uint256 phNo,
+        address author,
+        uint256 orcidID
+    );
+    event EditorCreated(
+        string firstName,
+        string lastName,
+        string designation,
+        string affiliation,
+        string city,
+        string email,
+        uint256 phNo,
+        address editor,
+        uint256 orcidID
+    );
+    event ReviewerCreated(
+        string firstName,
+        string lastName,
+        string designation,
+        string affiliation,
+        string city,
+        string email,
+        uint256 phNo,
+        address reviewer,
+        uint256 orcidID
+    );
+    event PublisherCreated(
+        string[] publisherInfo,
+        uint256 phNo,
+        uint256 ISSN,
+        string email,
+        string designation,
+        string journalName,
+        uint256 publisherID,
+        address publisher,
+        bool isApproved
+    );
     event AuthorApproved(address user, uint256 orcidId);
     event EditorApproved(address user, uint256 orcidId);
     event ReviewerApproved(address user, uint256 orcidId);
     event PublisherApproved(address uesr, uint256 publisherID);
 
-    enum Role{
-    USER,
-    ADMIN,
-    AUTHOR,
-    EDITOR,
-    REVIEWER,
-    PUBLISHER
+    enum Role {
+        USER,
+        ADMIN,
+        AUTHOR,
+        EDITOR,
+        REVIEWER,
+        PUBLISHER
     }
 
     // single user can have many roles. reviewer can act as an author.
     // reviewer can't be an editor.
 
     Role defaultChoice = Role.USER;
-
-    mapping(address => Role) role;
+    mapping(address => Role) public adminRole;
+    mapping(address => uint8[]) public getAppliedRoles;
+    mapping(address => Role[]) public getApprovedRoles;
     mapping(address => mapping(uint256 => Authors)) public getAuthorDetails;
     mapping(address => mapping(uint256 => Editors)) public getEditorDetails;
     mapping(address => mapping(uint256 => Reviewers)) public getReviewerDetails;
-    mapping(address => mapping(uint256 => Publishers)) public getPublisherDetails;
+    mapping(address => mapping(uint256 => Publishers))
+        public getPublisherDetails;
     mapping(address => mapping(uint256 => Papers)) public getPaperDetails;
     mapping(uint256 => Papers) public getPaperDetailsByPaperID;
-    mapping(address => mapping(uint256=> string)) public screenerRemarks;
+    mapping(address => mapping(uint256 => string)) public screenerRemarks;
     mapping(uint256 => PaperReview[]) public reviews;
- 
-    modifier onlyAdmin(){
-        require(role[msg.sender] == Role.ADMIN);
-        admin = msg.sender;
+
+    modifier onlyAdmin() {
+        require(admin == msg.sender);
         _;
     }
 
-    modifier onlyApplier(address user){
+    modifier onlyApplier(address user) {
         require(user == msg.sender, "NOT USER ADDRESS");
         _;
     }
 
-    modifier onlyAuthor(address author, uint256 orcidId){
-        require(getAuthorDetails[author][orcidId].isApproved == true, "INVALID AUTHOR");
-        require(role[author] == Role.AUTHOR, "INVALID ROLE");
+    modifier onlyAuthor(address author, uint256 orcidId) {
+        require(
+            getAuthorDetails[author][orcidId].isApproved == true,
+            "INVALID AUTHOR"
+        );
         _;
     }
 
-    modifier onlyEditor(address editor, uint256 orcidId){
-        require(getEditorDetails[editor][orcidId].isApproved == true, "INVALID AUTHOR");
-        require(role[editor] == Role.EDITOR, "INVALID ROLE");
+    modifier onlyEditor(address editor, uint256 orcidId) {
+        require(
+            getEditorDetails[editor][orcidId].isApproved == true,
+            "INVALID AUTHOR"
+        );
         _;
     }
 
-    modifier onlyReviewer(address reviewer, uint256 orcidId){
-        require(getReviewerDetails[reviewer][orcidId].isApproved == true, "INVALID REVIEWER");
-        require(role[reviewer] == Role.REVIEWER, "INVALID ROLE");
+    modifier onlyReviewer(address reviewer, uint256 orcidId) {
+        require(
+            getReviewerDetails[reviewer][orcidId].isApproved == true,
+            "INVALID REVIEWER"
+        );
         _;
     }
 
-    constructor(){
-        role[msg.sender] = Role.ADMIN;
-        admin = msg.sender ;
+    constructor() {
+        adminRole[msg.sender] = Role.ADMIN;
+        getAppliedRoles[msg.sender].push(1);
+        admin = msg.sender;
     }
 
-    function getUserRole(address user) external view returns(Role){
-        return role[user];
+    function fetchAppliedRoles(
+        address user
+    ) external view returns (uint8[] memory) {
+        return getAppliedRoles[user];
     }
 
-    function applyForAuthorRole(string memory firstName, string memory lastName, string memory designation, string memory affiliation, string memory city, string memory email, uint256 phNo, address user, uint256 orcidID) external returns(bool authorCreated){
+    function fetchApprovedRoles(
+        address user
+    ) external view returns (Role[] memory) {
+        return getApprovedRoles[user];
+    }
 
+    function applyForAuthorRole(
+        string memory firstName,
+        string memory lastName,
+        string memory designation,
+        string memory affiliation,
+        string memory city,
+        string memory email,
+        uint256 phNo,
+        address user,
+        uint256 orcidID
+    ) external returns (bool authorCreated) {
+        if (getAppliedRoles[user].length == 0) {
+            getAppliedRoles[user].push(0);
+        }
         Authors memory auth = Authors({
             firstName: firstName,
             lastName: lastName,
@@ -176,19 +242,39 @@ contract BrahmaBlockchain{
 
         getAuthorDetails[user][orcidID] = auth;
 
-        role[user] = Role.AUTHOR;        
+        authorCreated = true;        
 
-        authorCreated = true;
+        getAppliedRoles[user].push(2);
 
-        emit AuthorCreated(firstName, lastName, designation, affiliation, city, email, phNo, user, orcidID);
+        emit AuthorCreated(
+            firstName,
+            lastName,
+            designation,
+            affiliation,
+            city,
+            email,
+            phNo,
+            user,
+            orcidID
+        );
 
         return authorCreated;
-
     }
 
-    function applyForEditorRole(string memory firstName, string memory lastName, string memory designation, string memory affiliation, string memory city, string memory email, uint256 phNo, address user, uint256 orcidID) external  returns(bool editorCreated){
-
-        require(role[user] != Role.REVIEWER, "Invalid Role");
+    function applyForEditorRole(
+        string memory firstName,
+        string memory lastName,
+        string memory designation,
+        string memory affiliation,
+        string memory city,
+        string memory email,
+        uint256 phNo,
+        address user,
+        uint256 orcidID
+    ) external returns (bool editorCreated) {
+        if (getAppliedRoles[user].length == 0) {
+            getAppliedRoles[user].push(0);
+        }
 
         Editors memory edit = Editors({
             firstName: firstName,
@@ -205,18 +291,39 @@ contract BrahmaBlockchain{
 
         getEditorDetails[user][orcidID] = edit;
 
-        role[user] = Role.EDITOR;        
+        getAppliedRoles[user].push(3);
 
         editorCreated = true;
 
-        emit EditorCreated(firstName, lastName, designation, affiliation, city, email, phNo, user, orcidID);
+        emit EditorCreated(
+            firstName,
+            lastName,
+            designation,
+            affiliation,
+            city,
+            email,
+            phNo,
+            user,
+            orcidID
+        );
 
         return editorCreated;
-
     }
 
-    function applyForReviewerRole(string memory firstName, string memory lastName, string memory designation, string memory affiliation, string memory city, string memory email, uint256 phNo, address user, uint256 orcidID) external returns(bool reviewerCreated){
-        require(role[user] != Role.EDITOR, "Invalid Role");
+    function applyForReviewerRole(
+        string memory firstName,
+        string memory lastName,
+        string memory designation,
+        string memory affiliation,
+        string memory city,
+        string memory email,
+        uint256 phNo,
+        address user,
+        uint256 orcidID
+    ) external returns (bool reviewerCreated) {
+        if (getAppliedRoles[user].length == 0) {
+            getAppliedRoles[user].push(0);
+        }
 
         Reviewers memory review = Reviewers({
             firstName: firstName,
@@ -233,18 +340,38 @@ contract BrahmaBlockchain{
 
         getReviewerDetails[user][orcidID] = review;
 
-        role[user] = Role.REVIEWER;        
+        getAppliedRoles[user].push(4);
 
         reviewerCreated = true;
 
-        emit ReviewerCreated(firstName, lastName, designation, affiliation, city, email, phNo, user, orcidID);
+        emit ReviewerCreated(
+            firstName,
+            lastName,
+            designation,
+            affiliation,
+            city,
+            email,
+            phNo,
+            user,
+            orcidID
+        );
 
         return reviewerCreated;
-
     }
 
-    function applyForPublisherRole(string[] memory publisherInfo, uint256 phNo, uint256 ISSN, string memory email, string memory designation, string memory journalName, address user, uint256 publisherID)external returns(bool publisherCreated){
-
+    function applyForPublisherRole(
+        string[] memory publisherInfo,
+        uint256 phNo,
+        uint256 ISSN,
+        string memory email,
+        string memory designation,
+        string memory journalName,
+        address user,
+        uint256 publisherID
+    ) external returns (bool publisherCreated) {
+        if (getAppliedRoles[user].length == 0) {
+            getAppliedRoles[user].push(0);
+        }
         Publishers memory publisher = Publishers({
             publisherInfo: publisherInfo,
             phNo: phNo,
@@ -259,98 +386,124 @@ contract BrahmaBlockchain{
 
         getPublisherDetails[user][publisherID] = publisher;
 
-        role[user] = Role.PUBLISHER;  
+        getAppliedRoles[user].push(5);
 
         publisherCreated = true;
 
-        emit PublisherCreated(publisherInfo, phNo, ISSN, email, designation, journalName, publisherID, user, true);
-
+        emit PublisherCreated(
+            publisherInfo,
+            phNo,
+            ISSN,
+            email,
+            designation,
+            journalName,
+            publisherID,
+            user,
+            true
+        );
     }
 
-    function approveAuthor(address user, uint256 orcidId) external onlyAdmin returns(bool authorApproved){
+    function approveAuthor(
+        address user,
+        uint256 orcidId
+    ) external onlyAdmin returns (bool authorApproved) {
 
-        require(role[user] == Role.AUTHOR, "BB5");
-
-        getAuthorDetails[user][orcidId].isApproved =  true;
+        getAuthorDetails[user][orcidId].isApproved = true;
 
         authors.push(getAuthorDetails[user][orcidId]);
+
+        getApprovedRoles[user].push(Role.AUTHOR);
 
         authorApproved = true;
 
         emit AuthorApproved(user, orcidId);
-
     }
 
-    function approveEditor(address user, uint256 orcidId) external onlyAdmin returns(bool editorApproved){
+    function approveEditor(
+        address user,
+        uint256 orcidId
+    ) external onlyAdmin returns (bool editorApproved) {
 
-        require(role[user] == Role.EDITOR, "BB6");
-
-        getEditorDetails[user][orcidId].isApproved =  true;
+        getEditorDetails[user][orcidId].isApproved = true;
 
         editors.push(getEditorDetails[user][orcidId]);
+
+        getApprovedRoles[user].push(Role.EDITOR);
 
         editorApproved = true;
 
         emit EditorApproved(user, orcidId);
-
     }
 
+    function approveReviewer(
+        address user,
+        uint256 orcidId
+    ) external onlyAdmin returns (bool reviewerApproved) {
 
-    function approveReviewer(address user, uint256 orcidId) external onlyAdmin returns(bool reviewerApproved){
-
-        require(role[user] == Role.REVIEWER, "INVALID ROLE");
-
-        getReviewerDetails[user][orcidId].isApproved =  true;
+        getReviewerDetails[user][orcidId].isApproved = true;
 
         reviewers.push(getReviewerDetails[user][orcidId]);
 
         reviewerApproved = true;
 
-        emit ReviewerApproved(user, orcidId);
+        getApprovedRoles[user].push(Role.REVIEWER);
 
+        emit ReviewerApproved(user, orcidId);
     }
 
-    function approvePublisher(address user, uint256 publisherID) external onlyAdmin returns(bool reviewerApproved){
+    function approvePublisher(
+        address user,
+        uint256 publisherID
+    ) external onlyAdmin returns (bool reviewerApproved) {
 
-        require(role[user] == Role.PUBLISHER, "INVALID ROLE");
-
-        getPublisherDetails[user][publisherID].isApproved =  true;
+        getPublisherDetails[user][publisherID].isApproved = true;
 
         publishers.push(getPublisherDetails[user][publisherID]);
+
+        getApprovedRoles[user].push(Role.PUBLISHER);
 
         reviewerApproved = true;
 
         emit PublisherApproved(user, publisherID);
-
     }
 
-    function createPaper(uint256 paperID, uint256 orcidID, address paperScreener, address paperCreator, uint256 paperCreatedAt) external onlyAuthor(paperCreator, orcidID) returns(bool paperCreated){
-
+    function createPaper(
+        uint256 paperID,
+        uint256 orcidID,
+        address paperScreener,
+        address paperCreator,
+        uint256 paperCreatedAt
+    ) external onlyAuthor(paperCreator, orcidID) returns (bool paperCreated) {
         Papers memory paper = Papers({
-        URL: "www.google.com",
-        paperID: paperID,
-        paperCreator: paperCreator,
-        paperScreener: paperScreener,
-        isPaperValid: false,
-        isPaperScreened:false,
-        isPaperReviewed: false,
-        paperCreatedAt: paperCreatedAt,
-        submittedForScreening: false,
-        isPaperApproved: true
+            URL: "www.google.com",
+            paperID: paperID,
+            paperCreator: paperCreator,
+            paperScreener: paperScreener,
+            isPaperValid: false,
+            isPaperScreened: false,
+            isPaperReviewed: false,
+            paperCreatedAt: paperCreatedAt,
+            submittedForScreening: false,
+            isPaperApproved: true
         });
 
         getPaperDetails[paperCreator][paperID] = paper;
 
         paperCreated = true;
-
     }
 
-    function updatePaper(string memory URL, uint256 paperID, uint256 orcidID, address paperScreener, address paperCreator, uint256 paperCreatedAt) external onlyAuthor(paperCreator, orcidID) returns(bool paperUpdated){
-
+    function updatePaper(
+        string memory URL,
+        uint256 paperID,
+        uint256 orcidID,
+        address paperScreener,
+        address paperCreator,
+        uint256 paperCreatedAt
+    ) external onlyAuthor(paperCreator, orcidID) returns (bool paperUpdated) {
         // Papers memory paper = getPaperDetails[paperCreator][paperID];
 
         getPaperDetails[paperCreator][paperID].URL = URL;
-        getPaperDetails[paperCreator][paperID].paperID =  paperID;
+        getPaperDetails[paperCreator][paperID].paperID = paperID;
         getPaperDetails[paperCreator][paperID].paperCreator = paperCreator;
         getPaperDetails[paperCreator][paperID].paperScreener = paperScreener;
         getPaperDetails[paperCreator][paperID].isPaperValid = false;
@@ -361,52 +514,88 @@ contract BrahmaBlockchain{
         return paperUpdated = true;
     }
 
-    function submitPaperForScreening(address paperCreator, uint256 orcidID, uint256 paperID) external  onlyAuthor(paperCreator, orcidID) returns(bool paperSubmittedForScreening){
-
-        require(getPaperDetails[paperCreator][paperID].isPaperValid == false && getPaperDetails[paperCreator][paperID].submittedForScreening == false);
+    function submitPaperForScreening(
+        address paperCreator,
+        uint256 orcidID,
+        uint256 paperID
+    )
+        external
+        onlyAuthor(paperCreator, orcidID)
+        returns (bool paperSubmittedForScreening)
+    {
+        require(
+            getPaperDetails[paperCreator][paperID].isPaperValid == false &&
+                getPaperDetails[paperCreator][paperID].submittedForScreening ==
+                false
+        );
 
         getPaperDetails[paperCreator][paperID].submittedForScreening = true;
 
         paperSubmittedForScreening = true;
-
     }
 
-    function screenPaper(address paperCreater, uint256 orcidId, uint256 paperID,string memory remarks, bool isPaperAccepted) external onlyEditor(paperCreater, orcidId) returns(bool paperAccepted){
-
+    function screenPaper(
+        address paperCreater,
+        uint256 orcidId,
+        uint256 paperID,
+        string memory remarks,
+        bool isPaperAccepted
+    ) external onlyEditor(paperCreater, orcidId) returns (bool paperAccepted) {
         require(paperCreater != address(0) && paperID != 0);
 
-        require(getPaperDetails[paperCreater][paperID].submittedForScreening == true, "Paper not submitted for screening~");
+        require(
+            getPaperDetails[paperCreater][paperID].submittedForScreening ==
+                true,
+            "Paper not submitted for screening~"
+        );
 
         screenerRemarks[paperCreater][paperID] = remarks;
 
-        getPaperDetails[paperCreater][paperID].isPaperScreened = isPaperAccepted;
+        getPaperDetails[paperCreater][paperID]
+            .isPaperScreened = isPaperAccepted;
 
-        if(isPaperAccepted == true){
+        if (isPaperAccepted == true) {
             return paperAccepted = true;
-        }
-        else{
+        } else {
             return paperAccepted = false;
         }
-
     }
 
-    function getPaper(uint256 paperID, address author) external view returns(Papers memory paperByAuthor, Papers memory paperByPaperID){
-        
+    function getPaper(
+        uint256 paperID,
+        address author
+    )
+        external
+        view
+        returns (Papers memory paperByAuthor, Papers memory paperByPaperID)
+    {
         paperByAuthor = getPaperDetails[author][paperID];
-        
+
         paperByPaperID = getPaperDetailsByPaperID[paperID];
 
         return (paperByAuthor, paperByPaperID);
     }
 
-    function reviewPaper(address reviewer, uint256 orcidId, uint256 paperID, string memory remarks, bool isPaperAproved) external onlyReviewer(reviewer, orcidId) returns(bool paperReviewed){
-        
-        require(getPaperDetailsByPaperID[paperID].isPaperScreened ==  true, "Paper NOT SCREENED!");
-        
-        require(getAuthorDetails[reviewer][orcidId].ORCIDID != getReviewerDetails[reviewer][orcidId].ORCIDID, "SAME AUTHOR AND REVIEWER!");
-        
+    function reviewPaper(
+        address reviewer,
+        uint256 orcidId,
+        uint256 paperID,
+        string memory remarks,
+        bool isPaperAproved
+    ) external onlyReviewer(reviewer, orcidId) returns (bool paperReviewed) {
+        require(
+            getPaperDetailsByPaperID[paperID].isPaperScreened == true,
+            "Paper NOT SCREENED!"
+        );
+
+        require(
+            getAuthorDetails[reviewer][orcidId].ORCIDID !=
+                getReviewerDetails[reviewer][orcidId].ORCIDID,
+            "SAME AUTHOR AND REVIEWER!"
+        );
+
         require(reviews[paperID].length < 5, "ALREADY REVIEW PROCESS IS DONE!");
-        
+
         PaperReview memory reviewed = PaperReview({
             paperID: paperID,
             reviewer: reviewer,
@@ -417,13 +606,13 @@ contract BrahmaBlockchain{
         paperReview.push(reviewed);
 
         paperReviewed = true;
-        
-        return paperReviewed;
 
+        return paperReviewed;
     }
 
-    function getAllReviews(uint256 paperID) external view returns(PaperReview[] memory p, uint256 totalReviews){
-        
+    function getAllReviews(
+        uint256 paperID
+    ) external view returns (PaperReview[] memory p, uint256 totalReviews) {
         p = reviews[paperID];
 
         totalReviews = reviews[paperID].length;
@@ -431,25 +620,22 @@ contract BrahmaBlockchain{
         return (p, totalReviews);
     }
 
-    function approvePaper(address reviewer, uint256 orcidId, uint256 paperID, uint8 totalApprovals) external onlyReviewer(reviewer, orcidId) returns(bool paperApproved){
-        
-        if(reviews[paperID].length == 5 && totalApprovals >=3){
+    function approvePaper(
+        address reviewer,
+        uint256 orcidId,
+        uint256 paperID,
+        uint8 totalApprovals
+    ) external onlyReviewer(reviewer, orcidId) returns (bool paperApproved) {
+        if (reviews[paperID].length == 5 && totalApprovals >= 3) {
+            getPaperDetailsByPaperID[paperID].isPaperApproved = true;
 
-        getPaperDetailsByPaperID[paperID].isPaperApproved = true;
+            paperApproved = true;
 
-        paperApproved = true;
-
-        return paperApproved;
-
-        }
-        else{
-            
+            return paperApproved;
+        } else {
             paperApproved = false;
 
             return paperApproved;
-
         }
-
     }
-
 }

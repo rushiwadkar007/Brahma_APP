@@ -1,0 +1,143 @@
+body{ background-color: #000;}
+.formSection { max-width: 650px; margin: 0 auto; padding: 112px; box-shadow: 1px 6px 18px 0px #000000; border-radius: 5px; background: #2f2f2f; margin: 3% auto;}
+.formSection .form-control { margin-bottom: 15px; min-height: 45px;}
+label.form-check-label { color: #757575;}
+.bg-dark { background-color: #000 !important;}
+.btn {  flex: 1 1 auto;
+    margin: 10px;
+   min-height: 45px;
+   min-width: 160px;
+    text-align: center;
+    text-transform: uppercase;
+    transition: 0.5s;
+    background-size: 200% auto;
+    color: white;
+   /* text-shadow: 0px 0px 10px rgba(0,0,0,0.2);*/
+    /* box-shadow: 0 0 20px #eee; */
+    border-radius: 10px;}
+    .btn {
+        padding: 10px 25px;
+    }
+    .btn-1 { background-image: linear-gradient(to right, #673AB7 0%, #9C27B0 51%, #673AB7 100%); }
+    .btn:hover {background-position: right center;    color: #fff; /* change the direction of the change here */ }
+div#particles {
+    background-image: url(../Assets/images/dfffff.gif);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 100vh;
+}
+.wallet {
+    background-image: linear-gradient(to right, #673AB7 0%, #9C27B0 51%, #673AB7 100%);
+    padding: 10px;
+    border-radius: 10px;
+  
+}
+button.btn {
+    border: 1px solid #fff;
+}
+.wallet {
+    background-image: linear-gradient(to right, #673AB7 0%, #9C27B0 51%, #673AB7 100%);
+    padding: 10px;
+    border-radius: 10px;
+ 
+    padding: 50px;
+    margin-top: 25px;
+}
+
+.titleS label.text {
+    font-size: 15px;
+    padding-bottom: 25px;
+    text-transform: uppercase;
+    font-weight: 900;
+}
+.titleUtr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.seT.css-b62m3t-container {
+    width: 30%;
+}
+.titleS h5 {
+    color: #fff;
+    font-size: 26px;
+    font-weight: 800;
+}
+.titleUtr label {
+    font-size: 17px;
+    color: #fff;
+}
+table.rolTabl {
+    margin-top: 20px;
+}
+button.btn.btn-success, button.btn.btn.btn-primary {
+    background: #6f37b6;
+}
+.btn.btn-success:hover,button.btn.btn.btn-primary:hover {
+    border-color: #9529b1;
+    color: #fff;
+}
+.dashId th {
+    padding: 10px;
+    background: #e4d2ff;
+}
+.dashId td {
+    padding: 10px;
+}
+.btn:hover {
+    background-position: right center;
+    color: #6b39b7;
+    background: #fff;
+}
+.dashId {
+    background: #fff;
+    margin-top: 25px;
+}
+button.btn.btn-secondary {
+    background: transparent;
+    color: #7038b7;
+    border: 1px solid;
+}
+.form-control { height: 42px;}
+.formSection {
+    background-image: linear-gradient(to right, #673AB7 0%, #9C27B0 51%, #673AB7 100%);
+}
+.ft {
+    border-top: 1px solid #fff;
+    margin-top: 50px;
+}
+
+.modal.show .modal-dialog {
+    transform: none;
+    max-width: fit-content;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    top: 75px;
+}
+.ft p {
+    
+    color: #fff;
+}
+input{height: 1em;
+    width: 2em;
+    vertical-align: middle;
+}
+    a.navbar-brand.nm {
+        background: -webkit-linear-gradient(#9c27b0, #683ab7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 25px;
+        font-weight: 900;
+        text-shadow: 0 0 1px #ffffff, 0 0 7px #9c27b0;
+    }
+@media(max-width:767px){
+    .wallet button.btn { width: 100%; }
+    .seT.css-b62m3t-container { width: 40%; }
+    .wallet {padding: 15px; }
+    .ft p {
+        font-size: 10px;
+      
+    }
+}

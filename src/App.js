@@ -1,5 +1,8 @@
 import logo from './logo.svg';
-import './App.css';
+// import './App.css';
+import './Assets/style.css'
+import './Assets/responsive.css'
+
 import ReCAPTCHA from 'react-google-recaptcha';
 import React,{createContext, useContext,useState, useEffect,useRef} from 'react';
 import { BrowserRouter,Routes,Route } from 'react-router-dom';

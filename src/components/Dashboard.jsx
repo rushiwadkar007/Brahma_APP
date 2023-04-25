@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import Select from "react-select";
+// import MaterialTable, { MTableToolbar } from 'material-table';
 import { UploaderComponent } from "@syncfusion/ej2-react-inputs";
 import Form from "react-bootstrap/Form";
 import Table from "react-bootstrap/Table";
@@ -14,6 +15,7 @@ import { ethers } from "ethers";
 import { Rating } from "react-simple-star-rating";
 
 import ApplyRoleForm from "./Forms/ApplyRoleForm";
+import axios from "axios";
 function showsubmit(props) {
   const { user, type, email, loc, phno, modltype, isapproved } = props;
   return (
@@ -75,72 +77,79 @@ function Payment(props) {
   );
   const [ethr, setethr] = useState(0.02);
   const [money, setmoney] = useState(0);
-  const pay = () => {};
+  const pay = () => { };
   return (
     <>
       <div>
         <ToastContainer />
       </div>
-      <form
-        className="form-group"
-        action="/dashboard"
-        encType="application/x-www-form-urlencoded"
-      >
-        <input
-          className="form-control text-primary"
-          value={addr}
-          disabled
-          required
-          placeholder="Email Address"
-          name="email"
-          type="email"
-        />
-        <input
-          className="form-control text-primary"
-          value={ethr}
-          disabled
-          required
-          placeholder="Password"
-          name="pass"
-          type="password"
-        />
+      <div className="d">
+        <form
+          className="form-group"
+          action="/dashboard"
+          encType="application/x-www-form-urlencoded"
+        >
+          <input
+            className="form-control text-primary"
+            value={addr}
+            disabled
+            required
+            placeholder="Email Address"
+            name="email"
+            type="email"
+          />
+          <input
+            className="form-control text-primary"
+            value={ethr}
+            disabled
+            required
+            placeholder="Password"
+            name="pass"
+            type="password"
+          />
 
-        <input
-          className="form-check-input"
-          name="rem"
-          id="flexCheckDefault"
-          type="checkbox"
-        />
-        <label className="form-check-label" htmlFor="flexCheckDefault">
-          Remember Me
-        </label>
-        <br />
-        <button onClick={pay} className="btn btn-success">
-          Pay And Submit
-        </button>
-      </form>
+          <input
+            className="form-check-input"
+            name="rem"
+            id="flexCheckDefault"
+            type="checkbox"
+          />
+          <label className="form-check-label" htmlFor="flexCheckDefault">
+            Remember Me
+          </label>
+          <br />
+          <button onClick={pay} className="btn btn-success">
+            Pay And Submit
+          </button>
+        </form>
+      </div>
+
     </>
   );
 }
 
 function Dashboard_component(props) {
+  const navigate = useNavigate()
   const { account, contract, web3 } = props;
   let web3accountadd = "";
   const { user, type } = props;
   const isaproved = useRef(false);
   const [addr, setaddr] = useState("");
   const [show, setShow] = useState(false);
+  const [key, setKey] = useState("applyRole")
   const handleShow = () => setShow(true);
   const [ethr, setethr] = useState(0.02);
-  const [key, setKey] = useState("")
   console.log("dashboard component accoount contract web3 ", addr);
   const [money, setmoney] = useState(false);
+  const [unApprovedUsers, setUnApprovedUsers] = useState([])
+  const [unApUsers, setUAPUsers] = useState([])
+  console.log("unApprovedUsers", unApprovedUsers);
   const [txs, settsx] = useState([]);
   const web3Account = async () => {
     web3accountadd = await web3.eth.getAccounts();
     setaddr(web3accountadd[0]);
   };
-  
+
   const dopayment = async (settransac, ethr, addr) => {
     if (window.ethereum) {
       try {
@@ -165,11 +174,36 @@ function Dashboard_component(props) {
       }
     }
   };
+
+  const unapprovedUsers = async () => {
+    await axios.get("http://localhost:5050/roles/getUnapprovedRoles").then((res) => {
+      setUnApprovedUsers(res.data.data);
+      const unAPUsers = res.data.data.map((item, index) => {
+        console.log("unapproved users data ", item);
+        const id = item["orcidID"] || item["publisherID"];
+        const email = item["email"] || item["emailID"];
+        const isApproved = item["isApproved"]
+        const address = item["addr"];
+        const result = [id, item["role"], item["phoneNo"], email, isApproved, address];
+        return result;
+      });
+
+      console.log("result of unAPUsers", unAPUsers);
+      setUAPUsers(unAPUsers);
+    }).catch((error) => {
+      console.log("error in unapproved users ", error);
+    })
+  }
+  useEffect(() => {
+    unapprovedUsers()
+  }, [unApprovedUsers])
   const openpay = () => {
     setmoney(true);
   };
   const closepay = async () => {
+    navigate(-1)
     await dopayment(settsx, ethr, addr);
+
     toast.success("Saving status...", {
       position: toast.POSITION.BOTTOM_CENTER,
     });
@@ -177,7 +211,7 @@ function Dashboard_component(props) {
       setmoney(false);
     }, 2000);
   };
-  const pay = () => {};
+  const pay = () => { };
   const emailuser = useRef("");
   const projectId = "XXXXXXXXXX"; //your project id
   const projectSecret = "XXXXXXXXXXXXX"; //yout project secret
@@ -192,6 +226,7 @@ function Dashboard_component(props) {
   });
   const [urlarr, seturlarr] = useState([]);
   const [file, setfile] = useState("");
+
   const mailer = () => {
     const subject = "Approval Status Brahma Blockchain";
     const body = isaproved
@@ -244,6 +279,61 @@ function Dashboard_component(props) {
   const [pageno, setpageno] = useState(1);
   const [edited, changedit] = useState(false);
   const [pubmod, setpubmod] = useState(false);
+  const handleApproveRole = async (e, userAddress, userID) => {
+    console.log("target values ", e, userAddress)
+    let result = {};
+    switch (e) {
+      case "AUTHOR":
+        result = await contract.methods
+          .approveAuthor(
+            userAddress, userID
+          )
+          .send({ from: addr });
+        axios.post("http://localhost:5050/roles/approveRole", { e, userAddress }).then((res) => {
+          console.log("response apply auth role", res)
+        })
+        break;
+
+      case "EDITOR":
+        result = await contract.methods
+          .approveEditor(
+            userAddress, userID
+          )
+          .send({ from: addr });
+        axios.post("http://localhost:5050/roles/approveRole", {
+          e, userAddress
+        }).then((res) => {
+          console.log("response apply editor role", res);
+        })
+        break;
+      case "REVIEWER":
+        result = await contract.methods
+          .approveReviewer(
+            userAddress, userID
+          )
+          .send({ from: addr });
+        axios.post("http://localhost:5050/roles/approveRole", { e, userAddress }).then((res) => {
+          console.log("response apply reviewer role", res)
+        })
+        break;
+
+      case "PUBLISHER":
+        result = await contract.methods
+          .approvePublisher(
+            userAddress, userID
+          )
+          .send({ from: addr });
+
+        axios.post("http://localhost:5050/roles/approveRole", {
+          e, userAddress
+        }).then((res) => {
+          console.log("response apply reviewer role", res)
+        })
+        break;
+      default:
+        toast.error("INAVLID ROLE APPLICATION");
+    }
+  }
   const closepubmod = () => {
     toast.success("Pending are approved papers now.");
     setpubmod(false);
@@ -291,7 +381,7 @@ function Dashboard_component(props) {
   const closemodalhis = () => {
     setclickhis(false);
   };
-  const handler = () => {};
+  const handler = () => { };
   const [rating, setRating] = useState(0);
 
   // Catch Rating value
@@ -335,7 +425,7 @@ function Dashboard_component(props) {
   //   // console.log(fName, lName, designation, affiliation, city,email, addr phoneNo, orcidID, handleChangeFName, handleChangeLName, handleChangeDesignation, handleChangeAffiliation, handleChangeCity, handleChangePhoneNo, handleChangeOrcidID);
   // }
 
-  
+
   const uploadfile = (event) => {
     const data = event.target.files[0];
     const reader = new window.FileReader();
@@ -490,9 +580,8 @@ function Dashboard_component(props) {
               </label>
               <br />
               <button
-                onClick={pay}
+                onClick={() => { pay(); closepay() }}
                 className="btn btn-success"
-                onClick={closepay}
               >
                 Pay And Submit
               </button>
@@ -561,29 +650,32 @@ function Dashboard_component(props) {
     } else if (type == "Reviewer") {
       return (
         <>
-          <table className="table table-striped table-hover">
-            <thead>
-              <th className="bg-success">Author ID</th>
-              <th className="bg-info">Editor ID</th>
-              <th className="bg-primary">File Link</th>
-              <th className="bg-danger">Remarks</th>
-            </thead>
-            <tr>
-              <td>A1</td>
-              <td>E1</td>
-              <td>
-                <a href="#">Link demo</a>
-              </td>
-              <td>
-                <textarea
-                  placeholder="Throw yours remarks here"
-                  onKeyUp={changeremark}
-                  id="remarksrev"
-                  className="form-control"
-                ></textarea>
-              </td>
-            </tr>
-          </table>
+          <div className="table-responsive">
+
+            <table className="table table-striped table-hover dashId">
+              <thead>
+                <th >Author ID</th>
+                <th >Editor ID</th>
+                <th >File Link</th>
+                <th >Remarks</th>
+              </thead>
+              <tr>
+                <td>A1</td>
+                <td>E1</td>
+                <td>
+                  <a href="#">Link demo</a>
+                </td>
+                <td>
+                  <textarea
+                    placeholder="Throw yours remarks here"
+                    onKeyUp={changeremark}
+                    id="remarksrev"
+                    className="form-control"
+                  ></textarea>
+                </td>
+              </tr>
+            </table>
+          </div>
           <button className="btn btn-success">Review Pending Papers</button>
           <button
             style={{ marginTop: 8 }}
@@ -633,15 +725,16 @@ function Dashboard_component(props) {
                     placeholder="ORCIDID"
                   />
                 </div>
-                <div className="container-fluid justify-content-center">
-                  <table className="table table-striped table-hover">
+                <div className="table-responsive container-fluid justify-content-center">
+
+                  <table className="table table-striped table-hover dashId">
                     <thead>
-                      <th className="bg-default">Paper ID</th>
-                      <th className="bg-default">Editor ID</th>
-                      <th className="bg-primary">ORCIDID</th>
-                      <th className="bg-info">Remarks</th>
-                      <th className="bg-success"> Approve</th>
-                      <th className="bg-danger">Reject</th>
+                      <th >Paper ID</th>
+                      <th >Editor ID</th>
+                      <th >ORCIDID</th>
+                      <th >Remarks</th>
+                      <th > Approve</th>
+                      <th >Reject</th>
                     </thead>
                     <tr>
                       <td>P1</td>
@@ -656,6 +749,7 @@ function Dashboard_component(props) {
                       </td>
                     </tr>
                   </table>
+
                 </div>
               </Modal.Body>
               <Modal.Footer>
@@ -674,25 +768,31 @@ function Dashboard_component(props) {
       return (
         <>
           <ToastContainer />
-          <table className="table table-striped table-hover">
-            <thead>
-              <th className="bg-success">UserID</th>
-              <th className="bg-info">User Type</th>
-              <th className="bg-primary">Location</th>
-              <th className="bg-success">Phone no</th>
-              <th className="bg-info">Email Id</th>
-              <th className="bg-danger">IsApproved</th>
-            </thead>
-            <tr>
-              <td>A1</td>
-              <td>Author(Sample)</td>
-              <td>India</td>
-              <td>Sample-phone</td>
-              <td>Email Id</td>
-              <td>{isaproved.current}</td>
-            </tr>
-          </table>
-          <button onClick={handlemail} className="btn btn-primary">
+          <div className="table-responsive">
+            <table className="table table-striped table-hover dashId">
+              <thead>
+                <th >UserID</th>
+                <th >User Type</th>
+                <th >Location</th>
+                <th >Phone no</th>
+                <th >Email Id</th>
+                <th >IsApproved</th>
+              </thead>
+              {unApprovedUsers.map((item, index) => {
+                return (
+                  <tr>
+                    <td>{item["orcidID"] || item["publisherID"]}</td>
+                    <td>{item["role"]}</td>
+                    <td>India</td>
+                    <td>{item["phoneNo"]}</td>
+                    <td>{item["email"] || item["emailID"]}</td>
+                    <td>{item["isApproved"] === false ? "UnApproved" : "Approved"}</td>
+                  </tr>
+                )
+              })}
+            </table>
+          </div>
+          <button onClick={handlemail} className="btn">
             Approve Pending Users
           </button>
           <Modal show={mailerbox}>
@@ -711,40 +811,33 @@ function Dashboard_component(props) {
                   <th className="bg-success">Phone no</th>
                   <th className="bg-info">Email Id</th>
                   <th className="bg-danger">Status</th>
-                  <th className="bg-danger">Notify Them</th>
                 </thead>
-                <tr>
-                  <td>A1</td>
-                  <td>Author(Sample)</td>
-                  <td>India</td>
-                  <td>Sample-phone</td>
-                  <td ref={emailuser}>abc@gmail.com</td>
-                  <td>
-                    <Radio ref={isaproved}>Approve</Radio>
-                  </td>
-                  <td>
-                    <button onClick={mailer} className="btn btn-primary">
-                      Notify Them
-                    </button>
-                  </td>
-                </tr>
+                {unApUsers.map((item, index) => {
+                  console.log("u users ", index, item)
+                  return (
+                    <tr>
+                      <td>{item[0]}</td>
+                      <td>{item[1]}</td>
+                      <td>India</td>
+                      <td>{item[2]}</td>
+                      <td>{item[3]}</td>
+                      <td>{item[4] === false ? <button value={item[1]} onClick={(e) => handleApproveRole(e.target.value, item[5], item[0])}>Approve</button> : "Approved"}</td>
+                    </tr>
+                  )
+                  // return (
+                  //     <tr>
+                  //       <td>{item[0]}</td>
+                  //       <td>{item[1]}</td>
+                  //       <td>India</td>
+                  //       <td>{item[2]}</td>
+                  //       <td ref={emailuser}>{item[3]}</td>
+                  //       <td><Radio ref={isaproved}>Approve</Radio></td>
+                  //     </tr>
+                  // )
+                })}
+
               </table>
             </Modal.Body>
-            <Modal.Footer>
-              <div className="tacbox bg-warning">
-                <input id="checkbox" type="checkbox" />
-                <label style={{ marginLeft: 8 }} htmlFor="checkbox">
-                  {" "}
-                  I agree to <a href="#">Terms and Conditions</a> of approval.
-                </label>
-              </div>
-              <Button variant="secondary" onClick={mailunload}>
-                Close
-              </Button>
-              <Button variant="primary" onClick={mailconf}>
-                Confirm Status
-              </Button>
-            </Modal.Footer>
           </Modal>
         </>
       );
@@ -752,35 +845,37 @@ function Dashboard_component(props) {
       return (
         <>
           <ToastContainer />
-          <table className="table table-striped table-hover">
-            <thead>
-              <th className="bg-success">Author ID</th>
-              <th className="bg-info">Select Reviewer</th>
-              <th className="bg-primary">Action</th>
-              <th className="bg-danger">Remarks</th>
-            </thead>
-            <tr>
-              <td>A1</td>
-              <td>
-                <Select
-                  value={seloption}
-                  options={options}
-                  onChange={setseloption}
-                />
-              </td>
-              <td>
-                <a onClick={pdfload} href="#">
-                  EDIT
-                </a>
-              </td>
-              <td>
-                <textarea
-                  placeholder="Throw yours remarks here"
-                  className="form-control"
-                ></textarea>
-              </td>
-            </tr>
-          </table>
+          <div className="table-responsive">
+            <table className="table table-striped table-hover dashId">
+              <thead>
+                <th >Author ID</th>
+                <th >Select Reviewer</th>
+                <th >Action</th>
+                <th >Remarks</th>
+              </thead>
+              <tr>
+                <td>A1</td>
+                <td>
+                  <Select
+                    value={seloption}
+                    options={options}
+                    onChange={setseloption}
+                  />
+                </td>
+                <td>
+                  <a onClick={pdfload} href="#">
+                    EDIT
+                  </a>
+                </td>
+                <td>
+                  <textarea
+                    placeholder="Throw yours remarks here"
+                    className="form-control"
+                  ></textarea>
+                </td>
+              </tr>
+            </table>
+          </div>
           <button onClick={pdfload} className="btn btn-success">
             Edit Pending Papers
           </button>
@@ -844,29 +939,33 @@ function Dashboard_component(props) {
     } else if (type == "Publisher") {
       return (
         <>
-          <table className="table table-striped table-hover">
-            <thead>
-              <th className="bg-success">Author</th>
-              <th className="bg-default">ISSN</th>
-              <th className="bg-info">Status</th>
-              <th className="bg-primary">Journal</th>
-              <th className="bg-success">Pub Id</th>
-            </thead>
-            <tr>
-              <td>A1</td>
-              <td>ISSNNO</td>
-              <td>Approved</td>
-              <td>
-                <a href="#">Link Journal demo</a>
-              </td>
-              <td>PID-1234</td>
-            </tr>
-          </table>
+          <div className="table-responsive">
+
+
+            <table className="table table-striped table-hover dashId">
+              <thead>
+                <th >Author</th>
+                <th >ISSN</th>
+                <th >Status</th>
+                <th >Journal</th>
+                <th >Pub Id</th>
+              </thead>
+              <tr>
+                <td>A1</td>
+                <td>ISSNNO</td>
+                <td>Approved</td>
+                <td>
+                  <a href="#">Link Journal demo</a>
+                </td>
+                <td>PID-1234</td>
+              </tr>
+            </table>
+          </div>
           <button onClick={openpubmod} className="btn btn-primary">
             Publish pending approvals
           </button>
           <ToastContainer />
-          <Modal show={pubmod}>
+          <Modal show={pubmod} className="mw">
             <Modal.Header closeButton onClick={closepubmod}>
               <span className="panel">
                 <h1 className="left">{user}</h1>
@@ -879,17 +978,17 @@ function Dashboard_component(props) {
               className="form-group text-primary"
               encType="application/x-www-url-encoded"
             >
-              <Modal.Body style={{ overflowX: "scroll" }}>
-                <div className="container-fluid justify-content-center">
-                  <table className="table table-striped table-hover">
+              <Modal.Body>
+                <div className="table-responsive container-fluid justify-content-center">
+                  <table className="table table-striped table-hover dashId">
                     <thead>
-                      <th className="bg-default">Paper ID</th>
-                      <th className="bg-success">Reviewer ID</th>
-                      <th className="bg-secondary">Editor ID</th>
-                      <th className="bg-primary">Author ID</th>
-                      <th className="bg-danger">ISSN</th>
-                      <th className="bg-info"> ORCIDID</th>
-                      <th className="bg-warning">Publisger Rating</th>
+                      <th >Paper ID</th>
+                      <th >Reviewer ID</th>
+                      <th >Editor ID</th>
+                      <th >Author ID</th>
+                      <th >ISSN</th>
+                      <th > ORCIDID</th>
+                      <th >Publisger Rating</th>
                     </thead>
                     <tr>
                       <td>P1</td>
@@ -898,15 +997,15 @@ function Dashboard_component(props) {
                       <td>A1</td>
                       <td>DEMO</td>
                       <td>DEMO</td>
-                      <th>
+                      <td>
                         <Rating
                           onClick={handleRating}
                           onPointerEnter={onPointerEnter}
                           onPointerLeave={onPointerLeave}
                           onPointerMove={onPointerMove}
-                          /* Available Props */
+                        /* Available Props */
                         />
-                      </th>
+                      </td>
                     </tr>
                   </table>
                 </div>
@@ -926,43 +1025,46 @@ function Dashboard_component(props) {
       );
     } else if (type === "User") {
       return (
-        <Table style={{ background: "#F1EBEA" }} striped bordered hover>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Role</th>
-              <th>Apply</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td>AUTHOR</td>  
-              <ApplyRoleForm show={show} key={"applyRole"} account={account} contract={contract} web3={web3}/>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>EDITOR</td>
-              <td>
-                <Button variant="danger" onClick={handleShow}>✖</Button>
-              </td>
-            </tr>
-            <tr>
-              <td>3</td>
-              <td>REVIEWER</td>
-              <td>
-                <Button variant="success">APPLY</Button>
-              </td>
-            </tr>
-            <tr>
-              <td>4</td>
-              <td>PUBLISHER</td>
-              <td>
+        <div className="table-responsive">
+          <Table striped bordered hover className="rolTabl dashId">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Role</th>
+                <th style={{ textAlign: "right", paddingRight: "26px" }}>Apply</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>AUTHOR</td>
+                {props.appliedRoles.includes('2') ? <a>Already Applied</a> : <td align="right"><ApplyRoleForm show={show} role={"author"} account={account} contract={contract} web3={web3} /></td>}
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>EDITOR</td>
+                {/* <td>Applied</td> */}
+                {props.appliedRoles.includes('3') ? <a>Already Applied</a> : <td align="right"><ApplyRoleForm show={show} role={"editor"} account={account} contract={contract} web3={web3} /></td>}
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>REVIEWER</td>
+                <td align="right">
+                  {props.appliedRoles.includes('4') ? <a>Already Applied</a> : <ApplyRoleForm show={show} role={"reviewer"} account={account} contract={contract} web3={web3} />}</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>PUBLISHER</td>
+                <td align="right">
+                  {props.appliedRoles.includes('5') ? <a>Already Applied</a> : <ApplyRoleForm show={show} role={"publisher"} account={account} contract={contract} web3={web3} />}
+                </td>
+                {/* <td>
                 <Button variant="danger">✖</Button>
-              </td>
-            </tr>
-          </tbody>
-        </Table>
+              </td> */}
+              </tr>
+            </tbody>
+          </Table>
+        </div>
       );
     }
   }
@@ -993,13 +1095,17 @@ export function Dashboard(props) {
     5: "PUBLISHER",
   };
 
-  let currentRole = [];
+  let appliedroles = [];
   const [role, setRole] = useState("");
+  const [appliedRoles, setAppliedRoles] = useState([])
+  console.log("current role ", appliedRoles)
   const getRole = async () => {
-    currentRole = await contract.methods
-      .getUserRole("0x9A712b4980B474F9Edc6eD6599E4AdF2E6f8bc31")
+    appliedroles = await contract.methods
+      .fetchAppliedRoles(account)
       .call();
-    setRole(roles[currentRole[0]["0"]]);
+    let uniqueAppliedRoles = [...new Set(appliedroles)];
+
+    setAppliedRoles(uniqueAppliedRoles);
   };
 
   useEffect(() => {
@@ -1011,17 +1117,32 @@ export function Dashboard(props) {
   const [seloption, setseloption] = useState(null);
   return (
     <>
-      <h5>Current Role: {role}</h5>
-      <label className="text-danger text" htmlFor="type">
-        Welcome {name} as
-      </label>
-      <Select value={type} options={options} onChange={setseloption} />
-      <Dashboard_component
-        type={seloption ? seloption.value : ""}
-        account={account}
-        contract={contract}
-        web3={web3}
-      />
+      <div className="wallet">
+        <div className="titleS">
+          <h5>Current Role: {role}</h5>
+
+        </div>
+        <div className="titleUtr">
+          <label className=" text" htmlFor="type">
+            Welcome {name} as
+          </label>
+          <Select className="seT" value={type} options={options} onChange={setseloption} />
+
+        </div>
+
+        <Dashboard_component
+          type={seloption ? seloption.value : ""}
+          account={account}
+          contract={contract}
+          web3={web3}
+          appliedRoles={appliedRoles}
+        />
+
+
+
+
+      </div>
+
     </>
   );
 }

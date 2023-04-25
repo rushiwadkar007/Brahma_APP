@@ -190,32 +190,37 @@ export function Wallet() {
   };
 
   return (
-    <div className="App">
-        <button className="btn btn-success" style={{ padding: 10, margin: 10 }} onClick={connect}>
+    <div className="wallet">
+        <button className="btn" style={{ padding: 10, margin: 10 }} onClick={connect}>
           {account ? "Connected" : "Connect"}
         </button>
 
-        <button className="btn btn-info" style={{ padding: 10, margin: 10 }} onClick={sign}>
+        <button className="btn" style={{ padding: 10, margin: 10 }} onClick={sign}>
           Sign
         </button>
 
-        <button  className="btn btn-warning" style={{ padding: 10, margin: 10 }} onClick={sendTransaction}>
+        <button  className="btn" style={{ padding: 10, margin: 10 }} onClick={sendTransaction}>
           Send transaction
         </button>
 
-        <button className="btn btn-success" style={{ padding: 10, margin: 10 }} onClick={addEthereumChain}>
+        <button className="btn" style={{ padding: 10, margin: 10 }} onClick={addEthereumChain}>
           Add ethereum chain
         </button>
 
-        <button className="btn btn-success" style={{ padding: 10, margin: 10 }} onClick={ () => {navigate("/dashboard")}}>
+        <button className="btn" style={{ padding: 10, margin: 10 }} onClick={ () => {navigate("/dashboard")}}>
           Go to Dashboard
         </button>
-
+        <div className="ft">
+        <p >
         {chain && `Connected chain: ${chain}`}
-        <p></p>
+        </p>
+        <p > 
         {account && `Connected account: ${account}`}
-        <p></p>
-        {response && `Last request response: ${response}`}
+        </p>
+        <p >{response && `Last request response: ${response}`}</p>
+        </div>
+        
+        
     </div>
   );
 }

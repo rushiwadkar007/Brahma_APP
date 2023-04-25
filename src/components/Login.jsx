@@ -59,6 +59,7 @@ export function Login(props) {
       <div>
         <ToastContainer />
       </div>
+      <div className="formSection">
       <form
         className="form-group"
         onSubmit={(e) => handleOnSubmit(e)}
@@ -103,10 +104,12 @@ export function Login(props) {
           Remember Me
         </label>
         <br />
-        <button onClick={loginDetails} disabled={!flag} className="btn btn-success">
+        <button onClick={loginDetails} disabled={!flag} className="btn btn-1">
           LOGIN
         </button>
+       
       </form>
+      </div>
     </>
   );
 }
