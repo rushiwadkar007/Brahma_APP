@@ -23,6 +23,10 @@ const PublisherScehma = new mongoose.Schema({
   ],
   addr: { type: String, required: true },
   publisherID: { type: String, required: true },
+  isApproved:{
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = mongoose.model("Publisher", PublisherScehma);

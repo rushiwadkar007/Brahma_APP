@@ -144,7 +144,6 @@ const getUnapprovedUsers = async (req, res) => {
   })
 }
 
-
 const getUserRole = async (req, res) => {
   try {
     const roles = await getRoles(req.body.address);
@@ -189,8 +188,10 @@ const applyForAuthorRole = async (req, res) => {
         affiliation: affiliation,
         city: city,
         email: email,
+        role: "AUTHOR",
         phoneNo: phoneNo,
         rolesApplied: roles,
+        isApproved: false,
         approvedRoles: approvedRoles,
         addr: addr,
         orcidID: orcidID,
@@ -324,9 +325,11 @@ const applyForEditorRole = async (req, res) => {
         designation: designation,
         affiliation: affiliation,
         city: city,
+        role: "EDITOR",
         email: email,
         phoneNo: phoneNo,
         rolesApplied: roles,
+        isApproved: false,
         approvedRoles: approvedRoles,
         addr: addr,
         orcidID: orcidID,
@@ -494,8 +497,10 @@ const applyForReviewerRole = async (req, res) => {
         affiliation: affiliation,
         city: city,
         email: email,
+        role: "REVIEWER",
         phoneNo: phoneNo,
         rolesApplied: roles,
+        isApproved: false,
         approvedRoles: approvedRoles,
         addr: addr,
         orcidID: orcidID,
@@ -527,6 +532,7 @@ const applyForReviewerRole = async (req, res) => {
           rolesApplied: roles,
           approvedRoles: approvedRoles,
           addr: addr,
+          isApproved: false,
           orcidID: orcidID,
         }
       });
@@ -660,6 +666,8 @@ const applyForPublisherRole = async (req, res) => {
         emailID: email,
         phoneNo: phoneNo,
         rolesApplied: roles,
+        role: "PUBLISHER",
+        isApproved: false,
         approvedRoles: approvedRoles,
         addr: addr,
         publisherID: publisherID,
@@ -720,6 +728,19 @@ const applyForPublisherRole = async (req, res) => {
   }
 }
 
+const getUnapprovedRoles = async (req, res) =>{
+
+  const publishers = await Publisher.find({isApproved: false})
+  let users = await User.find({isApproved: false})
+
+  users = users.concat(publishers);
+
+  res.status(200).json({
+    data: users,
+    success: true
+  })
+}
+
 module.exports = {
   getUserRole,
   applyForAuthorRole,
@@ -728,5 +749,6 @@ module.exports = {
   applyForPublisherRole,
   saveApplication,
   approveRole,
-  getUnapprovedUsers
+  getUnapprovedUsers,
+  getUnapprovedRoles
 };

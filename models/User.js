@@ -14,6 +14,11 @@ const UserSchema = new mongoose.Schema({
   city: { type: String, required: true },
   email: { type: String, required: true },
   phoneNo: { type: Number, required: true },
+  isApproved: {
+    type: Boolean,
+    default: false,
+  },
+  role: { type: String, required: true },
   rolesApplied: [
     {
       type: String,
