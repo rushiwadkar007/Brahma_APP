@@ -472,7 +472,8 @@ contract BrahmaBlockchain {
         uint256 orcidID,
         address paperScreener,
         address paperCreator,
-        uint256 paperCreatedAt
+        uint256 paperCreatedAt,
+        string  memory paperURL
     ) external onlyAuthor(paperCreator, orcidID) returns (bool paperCreated) {
         Papers memory paper = Papers({
             URL: "www.google.com",

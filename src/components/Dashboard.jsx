@@ -1,7 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import Select from "react-select";
+import 'react-toastify/dist/ReactToastify.css';
 // import MaterialTable, { MTableToolbar } from 'material-table';
 import { UploaderComponent } from "@syncfusion/ej2-react-inputs";
+// import { Buffer } from 'buffer';
 import Form from "react-bootstrap/Form";
 import Table from "react-bootstrap/Table";
 import { click } from "@testing-library/user-event/dist/click";
@@ -145,6 +147,11 @@ function Dashboard_component(props) {
   const [unApUsers, setUAPUsers] = useState([])
   console.log("unApprovedUsers", unApprovedUsers);
   const [txs, settsx] = useState([]);
+  const [imageError, setImageError] = useState("");
+  const [selectedFileName, setSelectedFileName] = useState("");
+  const [selectedFile, setSelectedFile] = useState("");
+  const [image, setImage] = useState("");
+  const [IPFSURL, setIPFSURL] = useState("")
   const web3Account = async () => {
     web3accountadd = await web3.eth.getAccounts();
     setaddr(web3accountadd[0]);
@@ -184,7 +191,7 @@ function Dashboard_component(props) {
         const email = item["email"] || item["emailID"];
         const isApproved = item["isApproved"]
         const address = item["addr"];
-        const result = [id, item["role"], item["phoneNo"], email, isApproved, address];
+        const result = [id, item.rolesApplied[index], item["phoneNo"], email, isApproved, address];
         return result;
       });
 
@@ -225,6 +232,7 @@ function Dashboard_component(props) {
     },
   });
   const [urlarr, seturlarr] = useState([]);
+  console.log("url arr ", urlarr)
   const [file, setfile] = useState("");
 
   const mailer = () => {
@@ -425,15 +433,66 @@ function Dashboard_component(props) {
   //   // console.log(fName, lName, designation, affiliation, city,email, addr phoneNo, orcidID, handleChangeFName, handleChangeLName, handleChangeDesignation, handleChangeAffiliation, handleChangeCity, handleChangePhoneNo, handleChangeOrcidID);
   // }
 
+  const uploadFileToIPFS = () =>{
+    try {
+      let payload = {
+        file: selectedFile,
+        fileName: selectedFileName
+      };
+      console.log("payloadd", payload)
+      const formData = new FormData();
+      Object.keys(payload).forEach((key) => {
+        formData.append(key, payload.key);
+      });
+      if (selectedFile && selectedFileName) {
+        console.log("conspiracy handle clicked ", selectedFile, selectedFileName)
+        formData.append("ipfsImage", selectedFile, selectedFileName);
+      }
+      if (formData) {
+        axios.post("http://localhost:5050/roles/uploadPaper", formData)
+          .then(result => {
+            if(result.status === 200){
+              toast.success("File Uploaded To IPFS Please Submit your Paper")
+              setIPFSURL(result.data.IPFSURL)
+            }
+            
+          })
+          .catch(error => {
+            console.log(error)
+          })
+      }
 
-  const uploadfile = (event) => {
-    const data = event.target.files[0];
-    const reader = new window.FileReader();
-    reader.readAsArrayBuffer(data);
-    reader.onloadend = () => {
-      setfile(Buffer(reader.result));
-    };
-    event.preventDefault();
+      
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  const uploadfile = (e) => {
+    console.log("file uploaded ", e.target.files[0]);
+    let size = e.target.files[0].size;
+    const imgs = e.target.files[0].name.split(/[\s.]+/);
+    const ext = imgs[imgs.length - 1];
+    let imgExtArr = ["pdf"];
+    if (!imgExtArr.some((item) => item === ext)) {
+      setImageError("Please upload the image in correct format");
+      setSelectedFileName("");
+      setSelectedFile("");
+      return;
+    }
+
+    if (size <= 5242880) {
+      let preview = URL.createObjectURL(e.target.files[0]);
+      setSelectedFileName(e.target.files[0].name);
+      console.log("event.target.files[0] ", e.target.files[0])
+      setSelectedFile(e.target.files[0]);
+      setImage("");
+      setImageError("");
+    } else {
+      setSelectedFileName("");
+      setSelectedFile("");
+      setImageError("Unable to uplod image greater than size 500 kb");
+      return;
+    }
   };
   if (type.length) {
     if (type == "Author") {
@@ -461,6 +520,7 @@ function Dashboard_component(props) {
               <button
                 style={{ marginBottom: 17, marginTop: 17 }}
                 className="btn btn-success"
+                onClick={()=> uploadFileToIPFS()}
               >
                 Upload File
               </button>
@@ -779,16 +839,18 @@ function Dashboard_component(props) {
                 <th >IsApproved</th>
               </thead>
               {unApprovedUsers.map((item, index) => {
-                return (
-                  <tr>
-                    <td>{item["orcidID"] || item["publisherID"]}</td>
-                    <td>{item["role"]}</td>
-                    <td>India</td>
-                    <td>{item["phoneNo"]}</td>
-                    <td>{item["email"] || item["emailID"]}</td>
-                    <td>{item["isApproved"] === false ? "UnApproved" : "Approved"}</td>
-                  </tr>
-                )
+                if(item.rolesApplied[index] !== "USER"){
+                  return (
+                    <tr>
+                      <td>{item["orcidID"] || item["publisherID"]}</td>
+                      <td>{item.rolesApplied[index]}</td>
+                      <td>India</td>
+                      <td>{item["phoneNo"]}</td>
+                      <td>{item["email"] || item["emailID"]}</td>
+                      <td>{item["isApproved"] === false ? "UnApproved" : "Approved"}</td>
+                    </tr>
+                  )
+                }                                 
               })}
             </table>
           </div>
@@ -814,16 +876,19 @@ function Dashboard_component(props) {
                 </thead>
                 {unApUsers.map((item, index) => {
                   console.log("u users ", index, item)
-                  return (
-                    <tr>
-                      <td>{item[0]}</td>
-                      <td>{item[1]}</td>
-                      <td>India</td>
-                      <td>{item[2]}</td>
-                      <td>{item[3]}</td>
-                      <td>{item[4] === false ? <button value={item[1]} onClick={(e) => handleApproveRole(e.target.value, item[5], item[0])}>Approve</button> : "Approved"}</td>
-                    </tr>
-                  )
+                  if(item[1] !== "USER"){
+                    return (
+                      <tr>
+                        <td>{item[0]}</td>
+                        <td>{item[1]}</td>
+                        <td>India</td>
+                        <td>{item[2]}</td>
+                        <td>{item[3]}</td>
+                        <td>{item[4] === false ? <button value={item[1]} onClick={(e) => handleApproveRole(e.target.value, item[5], item[0])}>Approve</button> : "Approved"}</td>
+                      </tr>
+                    )
+                  }
+                  
                   // return (
                   //     <tr>
                   //       <td>{item[0]}</td>
