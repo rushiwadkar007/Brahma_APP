@@ -141,11 +141,10 @@ function Dashboard_component(props) {
   const [key, setKey] = useState("applyRole")
   const handleShow = () => setShow(true);
   const [ethr, setethr] = useState(0.02);
-  console.log("dashboard component accoount contract web3 ", addr);
   const [money, setmoney] = useState(false);
   const [unApprovedUsers, setUnApprovedUsers] = useState([])
+  console.log("unApproved users ", unApprovedUsers)
   const [unApUsers, setUAPUsers] = useState([])
-  console.log("unApprovedUsers", unApprovedUsers);
   const [txs, settsx] = useState([]);
   const [imageError, setImageError] = useState("");
   const [selectedFileName, setSelectedFileName] = useState("");
@@ -161,7 +160,6 @@ function Dashboard_component(props) {
     if (window.ethereum) {
       try {
         await window.ethereum.send("eth_requestAccounts");
-        console.log(addr, ethr);
         const provider = await ethers.providers(window.ethereum);
         const signer = provider.getSigner();
         ethers.utils.getAddress(addr);
@@ -169,7 +167,6 @@ function Dashboard_component(props) {
           to: addr,
           value: ethers.utils.parseEther(ethr),
         });
-        console.log(transac);
         settransac([transac]);
         toast.success("Saving status...", {
           position: toast.POSITION.BOTTOM_CENTER,
@@ -184,18 +181,30 @@ function Dashboard_component(props) {
 
   const unapprovedUsers = async () => {
     await axios.get("http://localhost:5050/roles/getUnapprovedRoles").then((res) => {
+      console.log("res.data.data", res.data.data)
       setUnApprovedUsers(res.data.data);
       const unAPUsers = res.data.data.map((item, index) => {
-        console.log("unapproved users data ", item);
+        console.log("unAPUsers", item, index);
         const id = item["orcidID"] || item["publisherID"];
         const email = item["email"] || item["emailID"];
-        const isApproved = item["isApproved"]
+        const isApproved = item?.isApproved
         const address = item["addr"];
-        const result = [id, item.rolesApplied[index], item["phoneNo"], email, isApproved, address];
-        return result;
+        const isAuthorApproved = item["isAuthorApproved"]
+        const isEditorApproved = item["isEditorApproved"]
+        const isReviewerApproved = item["isReviewerApproved"]
+        let obj = {
+          orcidID: item?.orcidID,
+          publisherID: item?.publisherID,
+          email: item?.email,
+          isApproved: item?.isApproved,
+          address: item.addr,
+          isAuthorApproved: item.isAuthorApproved,
+          isEditorApproved: item.isEditorApproved,
+          isReviewerApproved: item.isReviewerApproved
+        }        
+        console.log("unAPUsers", obj, index);
+        return obj;
       });
-
-      console.log("result of unAPUsers", unAPUsers);
       setUAPUsers(unAPUsers);
     }).catch((error) => {
       console.log("error in unapproved users ", error);
@@ -232,7 +241,6 @@ function Dashboard_component(props) {
     },
   });
   const [urlarr, seturlarr] = useState([]);
-  console.log("url arr ", urlarr)
   const [file, setfile] = useState("");
 
   const mailer = () => {
@@ -247,9 +255,9 @@ function Dashboard_component(props) {
     return <a href={`mailto:${emailuser}${params}`}>{Dashboard_component}</a>;
   };
   const options = [
-    { value: "R1", label: "Reviewer1" },
-    { value: "R2", label: "Reviewer2" },
-    { value: "R3", label: "Reviewer3" },
+    { value: 0, label: "Reviewer1" },
+    { value: 1, label: "Reviewer2" },
+    { value: 2, label: "Reviewer3" }
   ];
   const confedit = () => {
     toast.info("Saving edits...", {
@@ -279,6 +287,7 @@ function Dashboard_component(props) {
   const [clicked, setclicked] = useState(false);
   const [clickhis, setclickhis] = useState(false);
   const [seloption, setseloption] = useState(null);
+  console.log("seloption", seloption)
   const [reviewid, setreviewid] = useState("");
   const [authorid, setauthorid] = useState("");
   const [reviewmod, setrevmod] = useState(false);
@@ -287,8 +296,36 @@ function Dashboard_component(props) {
   const [pageno, setpageno] = useState(1);
   const [edited, changedit] = useState(false);
   const [pubmod, setpubmod] = useState(false);
+  const [orcidID, setOrcidID] = useState("")
+  const [paperScreener, setPaperScreener] = useState("")
+  const [papersForScreening, setPapersForScreening] = useState([])
+  const [papers, setPapers] = useState([])
+  const [editorRemarks, setEditorRemarks] = useState("")
+  const [editPaperDetails, setEditPaperDetails] = useState([])
+  const getPapers = (addr) => {
+    axios.get(`http://localhost:5050/roles/getPapersByCreater`, { params: { paperCreator: addr } }).then((res) => {
+
+      setPapers(res.data.data)
+    })
+  }
+
+  const getPapersSubmittedForScreening = (addr) => {
+    axios.get(`http://localhost:5050/roles/getPapersSubmittedForScreening`).then((res) => {
+      setPapersForScreening(res.data.data)
+    })
+  }
+
+  const submitPaperForScreening = async (event, paperCreator, orcidID, paperID) => {
+    event.preventDefault();
+    const result = await contract.methods.submitPaperForScreening(
+      paperCreator, orcidID, paperID
+    ).send({ from: addr });
+      axios.post("http://localhost:5050/roles/sendPaperFromScreen", { paperID: paperID }).then((res) => {
+        console.log("response apply auth role", res);
+      })
+    
+  }
   const handleApproveRole = async (e, userAddress, userID) => {
-    console.log("target values ", e, userAddress)
     let result = {};
     switch (e) {
       case "AUTHOR":
@@ -297,7 +334,7 @@ function Dashboard_component(props) {
             userAddress, userID
           )
           .send({ from: addr });
-        axios.post("http://localhost:5050/roles/approveRole", { e, userAddress }).then((res) => {
+        axios.post("http://localhost:5050/roles/approveRole", { role: e, userAddress: userAddress }).then((res) => {
           console.log("response apply auth role", res)
         })
         break;
@@ -416,6 +453,7 @@ function Dashboard_component(props) {
 
   useEffect(() => {
     web3Account();
+    getPapersSubmittedForScreening()
   }, []);
 
 
@@ -433,42 +471,39 @@ function Dashboard_component(props) {
   //   // console.log(fName, lName, designation, affiliation, city,email, addr phoneNo, orcidID, handleChangeFName, handleChangeLName, handleChangeDesignation, handleChangeAffiliation, handleChangeCity, handleChangePhoneNo, handleChangeOrcidID);
   // }
 
-  const uploadFileToIPFS = () =>{
+  const uploadFileToIPFS = () => {
     try {
       let payload = {
         file: selectedFile,
         fileName: selectedFileName
       };
-      console.log("payloadd", payload)
       const formData = new FormData();
       Object.keys(payload).forEach((key) => {
         formData.append(key, payload.key);
       });
       if (selectedFile && selectedFileName) {
-        console.log("conspiracy handle clicked ", selectedFile, selectedFileName)
         formData.append("ipfsImage", selectedFile, selectedFileName);
       }
       if (formData) {
         axios.post("http://localhost:5050/roles/uploadPaper", formData)
           .then(result => {
-            if(result.status === 200){
+            if (result.status === 200) {
               toast.success("File Uploaded To IPFS Please Submit your Paper")
               setIPFSURL(result.data.IPFSURL)
             }
-            
+
           })
           .catch(error => {
             console.log(error)
           })
       }
 
-      
+
     } catch (error) {
       console.log(error);
     }
   }
   const uploadfile = (e) => {
-    console.log("file uploaded ", e.target.files[0]);
     let size = e.target.files[0].size;
     const imgs = e.target.files[0].name.split(/[\s.]+/);
     const ext = imgs[imgs.length - 1];
@@ -483,7 +518,6 @@ function Dashboard_component(props) {
     if (size <= 5242880) {
       let preview = URL.createObjectURL(e.target.files[0]);
       setSelectedFileName(e.target.files[0].name);
-      console.log("event.target.files[0] ", e.target.files[0])
       setSelectedFile(e.target.files[0]);
       setImage("");
       setImageError("");
@@ -494,6 +528,108 @@ function Dashboard_component(props) {
       return;
     }
   };
+
+  const setEditorPaperDetils = (paperCreator, orcidID, paperID, e) => {
+    console.log("e setEditorPaperDetils", e)
+    setEditPaperDetails([paperCreator, orcidID, paperID])
+  }
+
+  const editorTRX = async (e) => {
+    e.preventDefault()
+    const result = await contract.methods.screenPaper(
+      editPaperDetails[0], editPaperDetails[1], editPaperDetails[2], editorRemarks, true
+    ).send({
+      from: addr
+    })
+  }
+
+  const [reviewerRemarks, setReviewerRemarks] = useState("")
+
+  const handleReviewerRemarks = (text) => {
+    console.log("text of reviewr", text)
+    setReviewerRemarks(text)
+
+  }
+
+  const approverPaperReview = async (orcidID, paperID) => {
+    await contract.methods.reviewPaper(
+      addr, orcidID, paperID, reviewerRemarks, true
+    ).send({
+      from: addr
+    })
+  }
+
+  const createPaper = async () => {
+    let paperID = Math.floor(Math.random() * 10000000000);
+    const paperID1 = String(paperID); //done
+    const jsDate = new Date();
+    const createdAt = Math.floor(new Date(jsDate).getTime() / 1000) //done
+
+    const result = await contract.methods
+      .createPaper(
+        paperID1,
+        orcidID,
+        paperScreener,
+        addr,
+        createdAt,
+        IPFSURL
+      )
+      .send({ from: addr });
+    axios.post("http://localhost:5050/roles/createPaper", {
+      paperID1,
+      orcidID,
+      paperScreener,
+      addr,
+      createdAt,
+      IPFSURL
+    })
+      .then(result => {
+        if (result.status === 200) {
+          toast.success("File Uploaded To IPFS Please Submit your Paper")
+          setIPFSURL(result.data.IPFSURL)
+        }
+
+      })
+  }
+
+  const payPublisher = async (publisher, paperID) =>{
+    contract.methods.payPublisher(publisher,paperID).send({
+      from: addr, // Replace with your Ethereum account address
+      value: web3.utils.toWei('0.1', 'ether') // Replace with the amount of ether you want to send
+    }).then((receipt) => {
+      console.log(receipt); // Transaction receipt
+    }).catch((error) => {
+      console.error(error); // Transaction error
+    });
+  }
+
+  const publishPaper = async(paperID, ISSN)=>{
+    const result = await contract.methods
+    .publishPaper(paperID, ISSN)
+    .send({ from: addr });
+  }
+  const [reviewer, setReviewer] = useState([])
+  const inputRef = useRef(null);
+  console.log("reviewer value ", reviewer);
+  const handleEditorValue = (value, e) => {
+    const val = e
+    if (papersForScreening.length > reviewer.length) {
+      setReviewer((prevInputValues) => [...prevInputValues, val]);
+    }
+    else {
+      let arr = [...reviewer];
+
+      arr[value] = e;
+
+      setReviewer(arr);
+
+      console.log("arr", arr)
+    }
+    // const rValue = document.getElementById(value)
+    // console.log("ravalue ", rValue)
+    // const inputbox = document.getElementById(index)
+    // inputbox.value = value;
+  }
   if (type.length) {
     if (type == "Author") {
       const preloadFiles = [
@@ -505,10 +641,9 @@ function Dashboard_component(props) {
         removeUrl: "https://ej2.syncfusion.com/services/api/uploadbox/Remove",
         saveUrl: "https://ej2.syncfusion.com/services/api/uploadbox/Save",
       };
-      console.log(clicked);
       return (
         <>
-          <p className="text-success">Welcome {type} to Brahma</p>
+          {/* <p className="text-success">Welcome {type} to Brahma</p> */}
           <form className="form-group" onSubmit={readandupload}>
             <span className="panel">
               <input
@@ -520,7 +655,7 @@ function Dashboard_component(props) {
               <button
                 style={{ marginBottom: 17, marginTop: 17 }}
                 className="btn btn-success"
-                onClick={()=> uploadFileToIPFS()}
+                onClick={() => uploadFileToIPFS()}
               >
                 Upload File
               </button>
@@ -533,7 +668,7 @@ function Dashboard_component(props) {
 
             <button
               style={{ marginLeft: 4 }}
-              onClick={openmodalhis}
+              onClick={() => { openmodalhis(); getPapers(addr) }}
               className="btn btn-info"
             >
               Show History
@@ -559,8 +694,9 @@ function Dashboard_component(props) {
                     id="desg"
                     style={{ marginBottom: 4 }}
                     name="desg"
+                    value={addr}
                     className="form-control"
-                    placeholder="Designation"
+                    placeholder="PaperCreater Address"
                   />
                   <input
                     type="text"
@@ -568,16 +704,17 @@ function Dashboard_component(props) {
                     style={{ marginBottom: 4 }}
                     name="affl"
                     className="form-control"
-                    placeholder="Affliation"
+                    placeholder="Paper Screener Wallet Address"
+                    onChange={(e) => setPaperScreener(e.target.value)}
                   />
                   <input
-                    type="password"
+                    type="number"
                     id="orcd"
                     style={{ marginBottom: 4 }}
                     name="orcd"
                     className="form-control"
-                    pattern="[0-9]"
                     placeholder="ORCIDID"
+                    onChange={(e) => setOrcidID(e.target.value)}
                   />
                 </div>
               </Modal.Body>
@@ -592,7 +729,7 @@ function Dashboard_component(props) {
                 <Button variant="secondary" onClick={closemodal}>
                   Close
                 </Button>
-                <Button variant="primary" onClick={closemodal}>
+                <Button variant="primary" onClick={() => { createPaper() }}>
                   Confirm Submission
                 </Button>
               </Modal.Footer>
@@ -602,12 +739,12 @@ function Dashboard_component(props) {
           <div>
             <ToastContainer />
           </div>
-          <Modal show={money}>
+          {/* <Modal show={money}>
             <Modal.Header closeButton onclick={closepay}>
               <h1 className="left">{user}</h1>
               <h2 className="right">{type}</h2>
             </Modal.Header>
-
+            {/* 
             <Modal.Body>
               <input
                 className="form-control text-primary"
@@ -627,8 +764,8 @@ function Dashboard_component(props) {
                 name="pass"
                 type="text"
               />
-            </Modal.Body>
-            <Modal.Footer>
+            </Modal.Body> */}
+          {/* <Modal.Footer>
               <input
                 className="form-check-input"
                 name="rem"
@@ -645,8 +782,8 @@ function Dashboard_component(props) {
               >
                 Pay And Submit
               </button>
-            </Modal.Footer>
-          </Modal>
+            </Modal.Footer> */}
+          {/* </Modal> */}
           <Modal show={clickhis}>
             <Modal.Header closeButton onClick={closemodalhis}>
               <span className="panel">
@@ -668,30 +805,30 @@ function Dashboard_component(props) {
                       <th className="bg-success">Reviewer ID</th>
                       <th className="bg-default">Editor ID</th>
                       <th className="bg-primary">Publisher Link</th>
-                      <th className="bg-danger">Remarks</th>
                       <th className="bg-info"> Status</th>
+                      <th className="bg-info"> Submit For Screening</th>
                     </thead>
-                    <tr>
-                      <td>P1</td>
-                      <td>A1</td>
-                      <td>E1</td>
-                      <td>
-                        <a href="#">
-                          {urlarr.length ? (
-                            urlarr.map((ind) => ind)
-                          ) : (
-                            <strong>Demo</strong>
-                          )}
-                        </a>
-                      </td>
-                      <td>
-                        <textarea
-                          placeholder="Throw yours remarks here"
-                          className="form-control"
-                        ></textarea>
-                      </td>
-                      <td>Approved</td>
-                    </tr>
+                    {papers.map((item, index) => {
+                      return (<tr>
+                        <td>{item["paperID"]}</td>
+                        <td>A1</td>
+                        <td>{item["paperScreener"]}</td>
+                        <td>
+                          {item["isPaperApproved"] === true ? 
+                          <a href={item["URL"]} target="_blank" rel="noopener noreferrer">
+                            View Paper
+                          </a> :
+                            <a>
+                              Paper is not published
+                            </a>}
+                        </td>
+                        <td>{item.isPaperApproved === false ? "NOT APPROVED" : "APPROVED"}</td>
+                        <td>{ item["isPaperApproved"] === false ? <button className="btn btn-success" onClick={(e) => submitPaperForScreening(e, item.paperCreator, item.orcidID, item.paperID)}>Submit For Screening</button>
+                        : <button className="btn btn-success" onClick={(e) =>{payPublisher("0x57740974A5d39730d66B459D6D962bEaE9d744B1", item.paperID)}}>Pay Publisher</button>
+                      }</td>
+                      </tr>)
+                    })
+                    }
                   </table>
                 </div>
               </Modal.Body>
@@ -714,36 +851,44 @@ function Dashboard_component(props) {
 
             <table className="table table-striped table-hover dashId">
               <thead>
-                <th >Author ID</th>
-                <th >Editor ID</th>
+                <th >ORCID ID</th>
+                <th>Paper ID</th>
                 <th >File Link</th>
                 <th >Remarks</th>
+                <th >Review Paper</th>
               </thead>
-              <tr>
-                <td>A1</td>
-                <td>E1</td>
-                <td>
-                  <a href="#">Link demo</a>
-                </td>
-                <td>
-                  <textarea
-                    placeholder="Throw yours remarks here"
-                    onKeyUp={changeremark}
-                    id="remarksrev"
-                    className="form-control"
-                  ></textarea>
-                </td>
-              </tr>
+              {papersForScreening.map((item, index) => {
+                return (
+                  <tr>
+                    <td>{item.orcidID}</td>
+                    <td>{item.paperID}</td>
+                    <td>
+                      <a href={item.URL} target="_blank" rel="noopener noreferrer">See File</a>
+                    </td>
+                    <td>
+                      <textarea
+                        placeholder="Throw yours remarks here"
+                        onKeyUp={changeremark}
+                        id="remarksrev"
+                        className="form-control"
+                        onChange={(e) => { handleReviewerRemarks(e.target.value) }}
+                      ></textarea>
+                    </td>
+                    <button className="btn btn-success" onClick={() => { approverPaperReview(item.orcidID, item.paperID) }}>Review</button>
+                  </tr>
+                )
+              })
+              }
             </table>
           </div>
-          <button className="btn btn-success">Review Pending Papers</button>
-          <button
+
+          {/* <button
             style={{ marginTop: 8 }}
             onClick={openrev}
             className="btn btn-primary"
           >
             Confirms Reviews
-          </button>
+          </button> */}
           <Modal show={reviewmod}>
             <Modal.Header closeButton onClick={closerev}>
               <span className="panel">
@@ -839,18 +984,19 @@ function Dashboard_component(props) {
                 <th >IsApproved</th>
               </thead>
               {unApprovedUsers.map((item, index) => {
-                if(item.rolesApplied[index] !== "USER"){
+                console.log("indexes unp users", item.rolesApplied[index])
+                if (item.isAuthorApproved === false || item.isEditorApproved  === false || item.isReviewerApproved === false) {
                   return (
                     <tr>
                       <td>{item["orcidID"] || item["publisherID"]}</td>
-                      <td>{item.rolesApplied[index]}</td>
+                      <td>{item.rolesApplied[index+1]}</td>
                       <td>India</td>
                       <td>{item["phoneNo"]}</td>
                       <td>{item["email"] || item["emailID"]}</td>
-                      <td>{item["isApproved"] === false ? "UnApproved" : "Approved"}</td>
+                      <td>{item.isAuthorApproved === false || item.isEditorApproved  === false || item.isReviewerApproved === false || item.isApproved === false ? "UnApproved" : "Approved"}</td>
                     </tr>
                   )
-                }                                 
+                }
               })}
             </table>
           </div>
@@ -868,27 +1014,30 @@ function Dashboard_component(props) {
               <table className="table table-striped table-hover">
                 <thead>
                   <th className="bg-success">UserID</th>
-                  <th className="bg-info">User Type</th>
                   <th className="bg-primary">Location</th>
                   <th className="bg-success">Phone no</th>
                   <th className="bg-info">Email Id</th>
-                  <th className="bg-danger">Status</th>
+                  <th className="bg-danger">Author Status</th>
+                  <th className="bg-danger">Editor Status</th>
+                  <th className="bg-danger">Reviewer Status</th>
+                  <th className="bg-danger">Publisher Status</th>
                 </thead>
-                {unApUsers.map((item, index) => {
-                  console.log("u users ", index, item)
-                  if(item[1] !== "USER"){
+                {unApprovedUsers.map((item, index) => {
+                  console.log("unap users", item);
+                  
                     return (
                       <tr>
-                        <td>{item[0]}</td>
-                        <td>{item[1]}</td>
+                        <td>{item.orcidID || item.publisherID}</td>
                         <td>India</td>
-                        <td>{item[2]}</td>
-                        <td>{item[3]}</td>
-                        <td>{item[4] === false ? <button value={item[1]} onClick={(e) => handleApproveRole(e.target.value, item[5], item[0])}>Approve</button> : "Approved"}</td>
+                        <td>{item.phoneNo}</td>
+                        <td>{item.email}</td>
+                        <td>{item.isAuthorApproved === false ? <button className="btn btn-success" value={item[1]} onClick={(e) => handleApproveRole(e.target.value, item[8], item[0])}>Approve</button> : "Approved"}</td>
+                        <td>{item.isEditorApproved === false ? <button className="btn btn-success" value={item[1]} onClick={(e) => handleApproveRole(e.target.value, item[8], item[0])}>Approve</button> : "Approved"}</td>
+                        <td>{item.isReviewerApproved === false ? <button className="btn btn-success" value={item[1]} onClick={(e) => handleApproveRole(e.target.value, item[8], item[0])}>Approve</button> : "Approved"}</td>
+                        <td>{item.isApproved === false ? <button className="btn btn-success" value={item[1]} onClick={(e) => handleApproveRole(e.target.value, item[8], item[0])}>Approve</button> : "Approved"}</td>
                       </tr>
                     )
-                  }
-                  
+
                   // return (
                   //     <tr>
                   //       <td>{item[0]}</td>
@@ -913,37 +1062,54 @@ function Dashboard_component(props) {
           <div className="table-responsive">
             <table className="table table-striped table-hover dashId">
               <thead>
-                <th >Author ID</th>
+                <th >Paper ID</th>
+                <th >Author Address</th>
+                <th>Paper URL</th>
                 <th >Select Reviewer</th>
                 <th >Action</th>
                 <th >Remarks</th>
               </thead>
-              <tr>
-                <td>A1</td>
-                <td>
-                  <Select
-                    value={seloption}
-                    options={options}
-                    onChange={setseloption}
-                  />
-                </td>
-                <td>
-                  <a onClick={pdfload} href="#">
-                    EDIT
-                  </a>
-                </td>
-                <td>
-                  <textarea
-                    placeholder="Throw yours remarks here"
-                    className="form-control"
-                  ></textarea>
-                </td>
-              </tr>
+              {papersForScreening.map((item, index) => {
+                return (<tr>
+                  <td>{item.paperID}</td>
+                  <td>{item.paperCreator}</td>
+                  <td >
+                    <a className="btn-success" href={item.URL} target="_blank" rel="noopener noreferrer">View Paper</a>
+                  </td>
+                  <td>
+                    <Select
+                      id={index}
+                      options={options}
+                      onChange={(e) => handleEditorValue(index, e)}
+                    >
+                      {options.map((item) => {
+                        return (
+                          // <option key={item.value} value={item.value}>{item.label}</option>
+                          <option key={item.value} value={item.label}>{item.label}</option>
+                        )
+                      })}
+                    </Select>
+                  </td>
+                  <td>
+
+                    <button className="btn btn-success" onClick={(e) => { pdfload(); setEditorPaperDetils(item.paperCreator, item.orcidID, item.paperID, index) }}>
+                      EDIT
+                    </button>
+                  </td>
+                  <td>
+                    <textarea
+                      id={item.paperCreator}
+                      placeholder={editorRemarks !== "" && editPaperDetails[2] === item.paperID ? editorRemarks : "EDITOR REMARKS"}
+                      className="form-control"
+                    ></textarea>
+                  </td>
+                </tr>)
+              })}
             </table>
           </div>
-          <button onClick={pdfload} className="btn btn-success">
+          {/* <button onClick={pdfload} className="btn btn-success">
             Edit Pending Papers
-          </button>
+          </button> */}
           <Modal show={pdfer}>
             <Modal.Header closeButton onClick={pdfunload}>
               <span className="panel">
@@ -958,19 +1124,19 @@ function Dashboard_component(props) {
               encType="application/x-www-url-encoded"
             >
               <Modal.Body>
-                <Button variant="primary" onclick={editor}>
+                {/* <Button variant="primary" onclick={editor}>
                   Edit Now
-                </Button>
+                </Button> */}
                 <div className="container-fluid">
-                  <Document file="" show={!edited} onClick={loadpdfsuccess}>
+                  {/* <Document file="" show={!edited} onClick={loadpdfsuccess}>
                     <Page pageNumber={pageno} />
-                  </Document>
-                  <p>
-                    {pageno} of {nump}
-                  </p>
+                  </Document> */}
                   <textarea
                     show={edited}
+                    id={editPaperDetails[0]}
                     className="form-control text-primary"
+                    placeholder="Editor Remarks"
+                    onChange={(e) => setEditorRemarks(e.target.value)}
                   ></textarea>
                 </div>
               </Modal.Body>
@@ -986,19 +1152,19 @@ function Dashboard_component(props) {
                 <Button variant="secondary" onClick={pdfunload}>
                   Close
                 </Button>
-                <Button variant="primary" onClick={pdfunload}>
+                <Button variant="primary" onClick={(e) => { editorTRX(e) }}>
                   Save Edits
                 </Button>
               </Modal.Footer>
             </form>
           </Modal>
-          <button
+          {/* <button
             style={{ marginLeft: 5 }}
             onClick={confedit}
             className="btn btn-success"
           >
             Commit Edit
-          </button>
+          </button> */}
         </>
       );
     } else if (type == "Publisher") {
@@ -1009,26 +1175,32 @@ function Dashboard_component(props) {
 
             <table className="table table-striped table-hover dashId">
               <thead>
-                <th >Author</th>
+                <th >ORCID ID</th>
                 <th >ISSN</th>
                 <th >Status</th>
                 <th >Journal</th>
                 <th >Pub Id</th>
+                <th>Publish Paper</th>
               </thead>
-              <tr>
-                <td>A1</td>
-                <td>ISSNNO</td>
-                <td>Approved</td>
+              {papers.map((item, index) =>{
+                return (
+                  <tr>
+                <td>{item.orcidID}</td>
+                <td>1245</td>
+                <td>{item.isPaperApproved}</td>
                 <td>
-                  <a href="#">Link Journal demo</a>
+                  <a href="#">{item.URL}</a>
                 </td>
-                <td>PID-1234</td>
+                <td>{4587}</td>
+                <td><button className="btn btn-primary" onClick={()=>publishPaper(item.paperID, "1245")}>Publish</button></td>
               </tr>
+                )
+              }) }
             </table>
           </div>
-          <button onClick={openpubmod} className="btn btn-primary">
+          {/* <button onClick={openpubmod} className="btn btn-primary">
             Publish pending approvals
-          </button>
+          </button> */}
           <ToastContainer />
           <Modal show={pubmod} className="mw">
             <Modal.Header closeButton onClick={closepubmod}>
@@ -1136,7 +1308,6 @@ function Dashboard_component(props) {
 }
 
 export function Dashboard(props) {
-  console.log("props ", props);
   const navigate = useNavigate();
   const { account, contract, web3 } = props;
   const cuser = props;
@@ -1163,7 +1334,6 @@ export function Dashboard(props) {
   let appliedroles = [];
   const [role, setRole] = useState("");
   const [appliedRoles, setAppliedRoles] = useState([])
-  console.log("current role ", appliedRoles)
   const getRole = async () => {
     appliedroles = await contract.methods
       .fetchAppliedRoles(account)
@@ -1188,11 +1358,7 @@ export function Dashboard(props) {
 
         </div>
         <div className="titleUtr">
-          <label className=" text" htmlFor="type">
-            Welcome {name} as
-          </label>
           <Select className="seT" value={type} options={options} onChange={setseloption} />
-
         </div>
 
         <Dashboard_component
@@ -1202,10 +1368,6 @@ export function Dashboard(props) {
           web3={web3}
           appliedRoles={appliedRoles}
         />
-
-
-
-
       </div>
 
     </>

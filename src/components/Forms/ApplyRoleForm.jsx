@@ -137,7 +137,8 @@ const ApplyRoleForm = ({ show, role, account, contract, web3 }) => {
             orcidID
           )
           .send({ from: addr });
-          axios.post("http://localhost:5050/roles/applyForAuthorRole",{fName,
+          axios.post("http://localhost:5050/roles/applyForAuthorRole",{
+            fName,
             lName,
             designation,
             affiliation,
